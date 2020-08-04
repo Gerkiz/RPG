@@ -5,7 +5,7 @@
 ![RPGSETTINGS](https://i.imgur.com/l1MOvZ1.png)
 
 # Mod Settings
-These settings can be changed at any time by an admin.
+##### These settings can be changed at any time by an admin.
 ![MODSETTINGS](https://i.imgur.com/hvzRhjL.png)
 
 # Bugs
