@@ -1,0 +1,12 @@
+{
+  "name": "RPG",
+  "version": "1.0.0",
+  "title": "RPG",
+  "author": "Gerkiz",
+  "contact": "Gerkiz#0001",
+  "description": "A Diablo like RPG stats system - now with magic!",
+  "dependencies": [
+    "base >= 0.17"  
+  ],
+  "factorio_version": "0.18"
+}
