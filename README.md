@@ -1,15 +1,15 @@
-# RPG
+## RPG
 ![RPG](https://i.imgur.com/3gzaXZP.png)
 
-# RPG Settings
+## RPG Settings
 ![RPGSETTINGS](https://i.imgur.com/l1MOvZ1.png)
 
-# Mod Settings
+## Mod Settings
 ##### These settings can be changed at any time by an admin.
 ![MODSETTINGS](https://i.imgur.com/hvzRhjL.png)
 
-# Bugs
+## Bugs
 None? Let me know if you run into any issues.
 
-# Information
+## Information
 This version of RPG is the one that will be always up to date. We run this module in our scenario that we host at Comfy.
