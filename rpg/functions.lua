@@ -10,10 +10,7 @@ local Public = {}
 local level_up_floating_text_color = {0, 205, 0}
 local visuals_delay = RPG.visuals_delay
 local xp_floating_text_color = RPG.xp_floating_text_color
-local teller_level_limit = RPG.teller_level_limit
 local experience_levels = RPG.experience_levels
-local teller_global_pool = RPG.teller_global_pool
-local rpg_frame_icons = RPG.rpg_frame_icons
 local points_per_level = RPG.points_per_level
 
 local round = function(num, idp)
@@ -108,7 +105,8 @@ end
 
 local function level_up(player)
     local rpg_t = RPG.get('rpg_t')
-    local RPG_GUI = package.loaded['rpg.gui']
+    local RPG_GUI = package.loaded['modules.rpg.gui']
+    local names = RPG.auto_allocate_nodes
 
     local distribute_points_gain = 0
     for i = rpg_t[player.index].level + 1, #experience_levels, 1 do
@@ -125,10 +123,20 @@ local function level_up(player)
     RPG_GUI.draw_level_text(player)
     rpg_t[player.index].points_to_distribute = rpg_t[player.index].points_to_distribute + distribute_points_gain
     RPG_GUI.update_char_button(player)
-    table.shuffle_table(rpg_frame_icons)
-    if player.gui.left[main_frame_name] then
+    if rpg_t[player.index].allocate_index ~= 1 then
+        local node = rpg_t[player.index].allocate_index
+        local index = names[node]:lower()
+        rpg_t[player.index][index] = rpg_t[player.index][index] + distribute_points_gain
+        rpg_t[player.index].points_to_distribute = rpg_t[player.index].points_to_distribute - distribute_points_gain
+        if not rpg_t[player.index].reset then
+            rpg_t[player.index].total = rpg_t[player.index].total + distribute_points_gain
+        end
+        RPG_GUI.update_player_stats(player)
+    end
+    if player.gui.screen[main_frame_name] then
         RPG_GUI.toggle(player, true)
     end
+
     Public.level_up_effects(player)
 end
 
@@ -230,9 +238,12 @@ function Public.update_mana(player)
         return
     end
 
-    if player.gui.left[main_frame_name] then
-        local f = player.gui.left[main_frame_name]
+    if player.gui.screen[main_frame_name] then
+        local f = player.gui.screen[main_frame_name]
         local data = Gui.get_data(f)
+        if not data then
+            return
+        end
         if data.mana and data.mana.valid then
             data.mana.caption = rpg_t[player.index].mana
         end
@@ -276,8 +287,8 @@ function Public.reward_mana(player, mana_to_add)
         return
     end
 
-    if player.gui.left[main_frame_name] then
-        local f = player.gui.left[main_frame_name]
+    if player.gui.screen[main_frame_name] then
+        local f = player.gui.screen[main_frame_name]
         local data = Gui.get_data(f)
         if data.mana and data.mana.valid then
             data.mana.caption = rpg_t[player.index].mana
@@ -311,9 +322,12 @@ function Public.update_health(player)
         return
     end
 
-    if player.gui.left[main_frame_name] then
-        local f = player.gui.left[main_frame_name]
+    if player.gui.screen[main_frame_name] then
+        local f = player.gui.screen[main_frame_name]
         local data = Gui.get_data(f)
+        if not data then
+            return
+        end
         if data.health and data.health.valid then
             data.health.caption = (round(player.character.health * 10) / 10)
         end
@@ -482,10 +496,6 @@ function Public.give_xp(amount)
 end
 
 function Public.rpg_reset_player(player, one_time_reset)
-    if not player.character then
-        player.set_controller({type = defines.controllers.god})
-        player.create_character()
-    end
     local RPG_GUI = package.loaded['rpg.gui']
     local rpg_t = RPG.get('rpg_t')
     local rpg_extra = RPG.get('rpg_extra')
@@ -508,6 +518,7 @@ function Public.rpg_reset_player(player, one_time_reset)
             mana_max = 0,
             last_spawned = 0,
             dropdown_select_index = 1,
+            allocate_index = 1,
             flame_boots = false,
             enable_entity_spawn = false,
             health_bar = rpg_t[player.index].health_bar,
@@ -539,6 +550,7 @@ function Public.rpg_reset_player(player, one_time_reset)
             mana_max = 0,
             last_spawned = 0,
             dropdown_select_index = 1,
+            allocate_index = 1,
             flame_boots = false,
             enable_entity_spawn = false,
             points_to_distribute = 0,
@@ -586,7 +598,7 @@ function Public.gain_xp(player, amount, added_to_pool, text)
         add_to_global_pool(amount, false)
         if not rpg_t[player.index].capped then
             rpg_t[player.index].capped = true
-            local message = teller_level_limit .. 'You have hit the max level for the current zone.'
+            local message = ({'rpg_functions.max_level'})
             Alert.alert_player_warning(player, 10, message)
         end
         return
@@ -681,7 +693,7 @@ function Public.global_pool(players, count)
                 RPG.debug_log('RPG - player capped: ' .. p.name .. '. Amount to pool:' .. share)
             end
         else
-            local message = teller_global_pool .. p.name .. ' received nothing. Reason: AFK'
+            local message = ({'rpg_functions.pool_reward'})
             Alert.alert_player_warning(p, 10, message)
             share = share / 10
             rpg_extra.leftover_pool = rpg_extra.leftover_pool + share

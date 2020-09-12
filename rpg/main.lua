@@ -23,6 +23,8 @@ end
 --RPG Frames
 local main_frame_name = RPG.main_frame_name
 
+local sub = string.sub
+
 local function on_gui_click(event)
     if not event.element then
         return
@@ -32,6 +34,14 @@ local function on_gui_click(event)
     end
     local element = event.element
     local player = game.players[event.player_index]
+    if not player or not player.valid then
+        return
+    end
+
+    local surface_name = RPG.get('rpg_extra').surface_name
+    if sub(player.surface.name, 0, #surface_name) ~= surface_name then
+        return
+    end
 
     if element.type ~= 'sprite-button' then
         return
@@ -297,11 +307,13 @@ local function regen_mana_player(players)
 
         if player and player.valid and not player.in_combat then
             if player.character and player.character.valid then
+                if rpg_t[player.index].mana < 0 then
+                    rpg_t[player.index].mana = 0
+                end
                 if rpg_t[player.index].mana >= rpg_t[player.index].mana_max then
                     goto continue
                 end
                 rpg_t[player.index].mana = rpg_t[player.index].mana + mana_per_tick
-
                 if rpg_t[player.index].mana >= rpg_t[player.index].mana_max then
                     rpg_t[player.index].mana = rpg_t[player.index].mana_max
                 end
@@ -334,13 +346,13 @@ local function give_player_flameboots(player)
     end
 
     if rpg_t[player.index].mana <= 0 then
-        player.print('Your flame boots have worn out.', {r = 0.22, g = 0.77, b = 0.44})
+        player.print(({'rpg_main.flame_boots_worn_out'}), {r = 0.22, g = 0.77, b = 0.44})
         rpg_t[player.index].flame_boots = false
         return
     end
 
     if rpg_t[player.index].mana % 500 == 0 then
-        player.print('Mana remaining: ' .. rpg_t[player.index].mana, {r = 0.22, g = 0.77, b = 0.44})
+        player.print(({'rpg_main.flame_mana_remaining', rpg_t[player.index].mana}), {r = 0.22, g = 0.77, b = 0.44})
     end
 
     local p = player.position
@@ -351,8 +363,8 @@ local function give_player_flameboots(player)
     if rpg_t[player.index].mana <= 0 then
         rpg_t[player.index].mana = 0
     end
-    if player.gui.left[main_frame_name] then
-        local f = player.gui.left[main_frame_name]
+    if player.gui.screen[main_frame_name] then
+        local f = player.gui.screen[main_frame_name]
         local data = Gui.get_data(f)
         if data.mana and data.mana.valid then
             data.mana.caption = rpg_t[player.index].mana
@@ -372,7 +384,7 @@ local function one_punch(character, target, damage)
         {
             name = 'flying-text',
             position = {character.position.x + base_vector[1] * 0.5, character.position.y + base_vector[2] * 0.5},
-            text = 'ONE PUNCH',
+            text = ({'rpg_main.one_punch_text'}),
             color = {255, 0, 0}
         }
     )
@@ -459,6 +471,13 @@ local function on_entity_damaged(event)
         return
     end
     if not event.cause.player then
+        return
+    end
+
+    local p = event.cause.player
+
+    local surface_name = RPG.get('rpg_extra').surface_name
+    if sub(p.surface.name, 0, #surface_name) ~= surface_name then
         return
     end
 
@@ -570,7 +589,7 @@ local function on_player_repaired_entity(event)
 
     local player = game.players[event.player_index]
 
-    if not player.character then
+    if not player or not player.valid or not player.character then
         return
     end
     Functions.gain_xp(player, 0.05)
@@ -585,6 +604,10 @@ end
 
 local function on_player_rotated_entity(event)
     local player = game.players[event.player_index]
+
+    if not player or not player.valid then
+        return
+    end
     if not player.character then
         return
     end
@@ -598,8 +621,7 @@ end
 
 local function on_player_changed_position(event)
     local player = game.players[event.player_index]
-    local surface_name = RPG.get('rpg_extra').surface_name
-    if string.sub(player.surface.name, 0, #surface_name) ~= surface_name then
+    if not player or not player.valid then
         return
     end
 
@@ -627,6 +649,26 @@ local building_and_mining_blacklist = {
     ['item-entity'] = true
 }
 
+local function on_player_died(event)
+    local player = game.players[event.player_index]
+
+    if not player or not player.valid then
+        return
+    end
+
+    RPG_GUI.remove_frame(player)
+end
+
+local function on_pre_player_left_game(event)
+    local player = game.players[event.player_index]
+
+    if not player or not player.valid then
+        return
+    end
+
+    RPG_GUI.remove_frame(player)
+end
+
 local function on_pre_player_mined_item(event)
     local entity = event.entity
     if not entity.valid then
@@ -639,6 +681,16 @@ local function on_pre_player_mined_item(event)
         return
     end
     local player = game.players[event.player_index]
+
+    if not player or not player.valid then
+        return
+    end
+
+    local surface_name = RPG.get('rpg_extra').surface_name
+    if sub(player.surface.name, 0, #surface_name) ~= surface_name then
+        return
+    end
+
     local rpg_t = RPG.get('rpg_t')
     if
         rpg_t[player.index].last_mined_entity_position.x == event.entity.position.x and
@@ -658,8 +710,8 @@ local function on_pre_player_mined_item(event)
         xp_amount = (1.5 + event.entity.prototype.max_health * 0.0035) * distance_multiplier
     end
 
-    if player.gui.left[main_frame_name] then
-        local f = player.gui.left[main_frame_name]
+    if player.gui.screen[main_frame_name] then
+        local f = player.gui.screen[main_frame_name]
         local data = Gui.get_data(f)
         if data.exp_gui and data.exp_gui.valid then
             data.exp_gui.caption = math.floor(rpg_t[player.index].xp)
@@ -675,7 +727,7 @@ local function on_player_crafted_item(event)
         return
     end
     local player = game.players[event.player_index]
-    if not player.valid then
+    if not player or not player.valid then
         return
     end
 
@@ -840,7 +892,7 @@ local function on_player_used_capsule(event)
         return
     end
 
-    if string.sub(player.surface.name, 0, #surface_name) ~= surface_name then
+    if sub(player.surface.name, 0, #surface_name) ~= surface_name then
         return
     end
 
@@ -865,11 +917,7 @@ local function on_player_used_capsule(event)
     local p = player.print
 
     if rpg_t[player.index].last_spawned >= game.tick then
-        return p(
-            'There was a lot more to magic, as ' ..
-                player.name .. ' quickly found out, than waving their wand and saying a few funny words.',
-            Color.warning
-        )
+        return p(({'rpg_main.mana_casting_too_fast', player.name}), Color.warning)
     end
 
     local mana = rpg_t[player.index].mana
@@ -881,7 +929,7 @@ local function on_player_used_capsule(event)
     end
 
     if rpg_t[player.index].level < object.level then
-        return p('You lack the level to cast this spell.', Color.fail)
+        return p(({'rpg_main.low_level'}), Color.fail)
     end
 
     if not object.enabled then
@@ -903,12 +951,12 @@ local function on_player_used_capsule(event)
     }
 
     if not Math2D.bounding_box.contains_point(area, player.position) then
-        player.print('You wave your wand but realize that it´s out of reach.', Color.fail)
+        player.print(({'rpg_main.not_inside_pos'}), Color.fail)
         return
     end
 
-    if mana <= object.mana_cost then
-        return p('You don´t have enough mana to cast this spell.', Color.fail)
+    if mana < object.mana_cost then
+        return p(({'rpg_main.no_mana'}), Color.fail)
     end
 
     local target_pos
@@ -935,7 +983,7 @@ local function on_player_used_capsule(event)
     end
     if object.obj_to_create == 'suicidal_comfylatron' then
         Functions.suicidal_comfylatron(position, surface)
-        p('You wave your wand and ' .. object_name .. ' is on the run!', Color.success)
+        p(({'rpg_main.suicidal_comfylatron', object_name}), Color.success)
         rpg_t[player.index].mana = rpg_t[player.index].mana - object.mana_cost
     elseif object.obj_to_create == 'warp-gate' then
         player.teleport(
@@ -945,7 +993,7 @@ local function on_player_used_capsule(event)
         rpg_t[player.index].mana = 0
         player.character.health = 10
         player.character.surface.create_entity({name = 'water-splash', position = player.position})
-        p('Warped home with minor bruises.', Color.info)
+        p(({'rpg_main.warped_ok'}), Color.info)
         rpg_t[player.index].mana = rpg_t[player.index].mana - object.mana_cost
     elseif projectile_types[obj_name] then
         for i = 1, object.amount do
@@ -960,16 +1008,16 @@ local function on_player_used_capsule(event)
                 end
             end
         end
-        p('You wave your wand and ' .. object_name .. ' appears.', Color.success)
+        p(({'rpg_main.object_spawned'}), Color.success)
         rpg_t[player.index].mana = rpg_t[player.index].mana - object.mana_cost
     else
         if object.target then
             surface.create_entity({name = obj_name, position = position, force = force, target = target_pos, speed = 1})
-            p('You wave your wand and ' .. object_name .. ' appears.', Color.success)
+            p(({'rpg_main.object_spawned'}), Color.success)
             rpg_t[player.index].mana = rpg_t[player.index].mana - object.mana_cost
         elseif object.obj_to_create == 'fish' then
             player.insert({name = 'raw-fish', count = object.amount})
-            p('You wave your wand and ' .. object_name .. ' appears.', Color.success)
+            p(({'rpg_main.object_spawned'}), Color.success)
             rpg_t[player.index].mana = rpg_t[player.index].mana - object.mana_cost
         elseif surface.can_place_entity {name = obj_name, position = position} then
             if object.biter then
@@ -978,14 +1026,15 @@ local function on_player_used_capsule(event)
             else
                 surface.create_entity({name = obj_name, position = position, force = force})
             end
-            p('You wave your wand and ' .. object_name .. ' appears.', Color.success)
+            p(({'rpg_main.object_spawned'}), Color.success)
             rpg_t[player.index].mana = rpg_t[player.index].mana - object.mana_cost
         else
-            p('Can´t create entity at given location.', Color.fail)
+            p(({'rpg_main.out_of_reach'}), Color.fail)
             return
         end
     end
 
+    local msg = player.name .. ' casted ' .. object.name .. '. '
     rpg_t[player.index].last_spawned = game.tick + object.tick
     Functions.update_mana(player)
 
@@ -1021,6 +1070,8 @@ local function tick()
     end
 end
 
+Event.add(defines.events.on_pre_player_left_game, on_pre_player_left_game)
+Event.add(defines.events.on_player_died, on_player_died)
 Event.add(defines.events.on_entity_damaged, on_entity_damaged)
 Event.add(defines.events.on_entity_died, on_entity_died)
 Event.add(defines.events.on_gui_click, on_gui_click)

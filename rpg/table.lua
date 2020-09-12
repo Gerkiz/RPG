@@ -1,50 +1,11 @@
 -- one table to rule them all!
 local Global = require 'utils.global'
+local Event = require 'utils.event'
 local Spells = require 'rpg.spells'
 local Gui = require 'utils.gui'
 
 local this = {
-    rpg_extra = {
-        debug = false,
-        breached_walls = 1,
-        reward_new_players = 0,
-        level_limit_enabled = false,
-        global_pool = 0,
-        personal_tax_rate = 0.3,
-        leftover_pool = 0,
-        turret_kills_to_global_pool = true,
-        difficulty = false,
-        surface_name = 'nauvis',
-        enable_health_and_mana_bars = true,
-        enable_mana = true,
-        mana_limit = 1500,
-        enable_wave_defense = false,
-        enable_flame_boots = true,
-        mana_per_tick = 0.1,
-        force_mana_per_tick = false,
-        enable_stone_path = true,
-        enable_one_punch = true,
-        enable_one_punch_globally = true,
-        rpg_xp_yield = {
-            ['behemoth-biter'] = 16,
-            ['behemoth-spitter'] = 16,
-            ['behemoth-worm-turret'] = 64,
-            ['big-biter'] = 8,
-            ['big-spitter'] = 8,
-            ['big-worm-turret'] = 48,
-            ['biter-spawner'] = 64,
-            ['character'] = 16,
-            ['gun-turret'] = 8,
-            ['laser-turret'] = 16,
-            ['medium-biter'] = 4,
-            ['medium-spitter'] = 4,
-            ['medium-worm-turret'] = 32,
-            ['small-biter'] = 1,
-            ['small-spitter'] = 1,
-            ['small-worm-turret'] = 16,
-            ['spitter-spawner'] = 64
-        }
-    },
+    rpg_extra = {},
     rpg_t = {},
     rpg_spells = Spells.conjure_items()
 }
@@ -66,25 +27,6 @@ Global.register(
 
 local Public = {}
 
-Public.rpg_frame_icons = {
-    'entity/small-worm-turret',
-    'entity/medium-worm-turret',
-    'entity/big-worm-turret',
-    'entity/behemoth-worm-turret',
-    'entity/small-biter',
-    'entity/small-biter',
-    'entity/small-spitter',
-    'entity/medium-biter',
-    'entity/medium-biter',
-    'entity/medium-spitter',
-    'entity/big-biter',
-    'entity/big-biter',
-    'entity/big-spitter',
-    'entity/behemoth-biter',
-    'entity/behemoth-biter',
-    'entity/behemoth-spitter'
-}
-
 Public.points_per_level = 5
 
 Public.experience_levels = {0}
@@ -103,9 +45,6 @@ Public.nth_tick = 18001
 Public.visuals_delay = 1800
 Public.xp_floating_text_color = {157, 157, 157}
 
-Public.teller_global_pool = '[color=blue]Global Pool Reward:[/color] \n'
-Public.teller_level_limit = '[color=blue]Level Limit:[/color] \n'
-
 Public.enemy_types = {
     ['unit'] = true,
     ['unit-spawner'] = true,
@@ -119,6 +58,58 @@ Public.classes = {
     ['dexterity'] = 'BEASTMASTER',
     ['vitality'] = 'SOLDIER'
 }
+
+Public.auto_allocate_nodes = {
+    'Deactivated',
+    'Strength',
+    'Magicka',
+    'Dexterity',
+    'Vitality'
+}
+
+function Public.reset_table()
+    this.rpg_extra.debug = false
+    this.rpg_extra.breached_walls = 1
+    this.rpg_extra.reward_new_players = 0
+    this.rpg_extra.level_limit_enabled = false
+    this.rpg_extra.global_pool = 0
+    this.rpg_extra.personal_tax_rate = 0.3
+    this.rpg_extra.leftover_pool = 0
+    this.rpg_extra.turret_kills_to_global_pool = true
+    this.rpg_extra.difficulty = false
+    this.rpg_extra.surface_name = 'nauvis'
+    this.rpg_extra.enable_health_and_mana_bars = false
+    this.rpg_extra.enable_mana = false
+    this.rpg_extra.mana_limit = 1500
+    this.rpg_extra.enable_wave_defense = false
+    this.rpg_extra.enable_flame_boots = false
+    this.rpg_extra.mana_per_tick = 0.1
+    this.rpg_extra.force_mana_per_tick = false
+    this.rpg_extra.enable_stone_path = false
+    this.rpg_extra.enable_auto_allocate = true
+    this.rpg_extra.enable_one_punch = true
+    this.rpg_extra.enable_one_punch_globally = false
+    this.rpg_t = {}
+    this.rpg_extra.rpg_xp_yield = {
+        ['behemoth-biter'] = 16,
+        ['behemoth-spitter'] = 16,
+        ['behemoth-worm-turret'] = 64,
+        ['big-biter'] = 8,
+        ['big-spitter'] = 8,
+        ['big-worm-turret'] = 48,
+        ['biter-spawner'] = 64,
+        ['character'] = 16,
+        ['gun-turret'] = 8,
+        ['laser-turret'] = 16,
+        ['medium-biter'] = 4,
+        ['medium-spitter'] = 4,
+        ['medium-worm-turret'] = 32,
+        ['small-biter'] = 1,
+        ['small-spitter'] = 1,
+        ['small-worm-turret'] = 16,
+        ['spitter-spawner'] = 64
+    }
+end
 
 --- Gets value from table
 ---@param key <string>
@@ -244,6 +235,18 @@ function Public.enable_stone_path(value)
     end
 
     return this.rpg_extra.enable_stone_path
+end
+
+--- Enables/disabled auto-allocations of skill-points.
+---@param value <boolean>
+function Public.enable_auto_allocate(value)
+    if value then
+        this.rpg_extra.enable_auto_allocate = value
+    else
+        this.rpg_extra.enable_auto_allocate = false
+    end
+
+    return this.rpg_extra.enable_auto_allocate
 end
 
 --- Enables/disabled stone-path-tile creation on mined.
@@ -390,4 +393,9 @@ Public.draw_main_frame_name = draw_main_frame_name
 Public.main_frame_name = main_frame_name
 Public.settings_button_name = settings_button_name
 
+local on_init = function()
+    Public.reset_table()
+end
+
+Event.on_init(on_init)
 return Public
