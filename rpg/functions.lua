@@ -105,7 +105,7 @@ end
 
 local function level_up(player)
     local rpg_t = RPG.get('rpg_t')
-    local RPG_GUI = package.loaded['modules.rpg.gui']
+    local RPG_GUI = package.loaded['rpg.gui']
     local names = RPG.auto_allocate_nodes
 
     local distribute_points_gain = 0
