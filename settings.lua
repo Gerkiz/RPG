@@ -3,7 +3,7 @@ data:extend {
         type = 'bool-setting',
         name = 'comfy_enable_debug',
         setting_type = 'runtime-global',
-        default_value = true
+        default_value = false
     },
     {
         type = 'bool-setting',

@@ -57,6 +57,7 @@ local function on_player_joined_game(event)
         Public.update_player_modifiers(game.players[event.player_index])
         return
     end
+
     this[event.player_index] = {}
     for _, modifier in pairs(modifiers) do
         this[event.player_index][modifier] = {}
