@@ -21,6 +21,11 @@ Event.on_nth_tick(
         else
             RPG_Settings.enable_mana(false)
         end
+        if settings.global.comfy_enable_explosive_bullets.value then
+            RPG_Settings.enable_explosive_bullets_globally(true)
+        else
+            RPG_Settings.enable_explosive_bullets_globally(false)
+        end
         if settings.global.comfy_enable_flame_boots.value then
             RPG_Settings.enable_flame_boots(true)
         else

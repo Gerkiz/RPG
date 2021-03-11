@@ -20,6 +20,7 @@ end
 
 --RPG Frames
 local main_frame_name = RPG.main_frame_name
+local spell_gui_frame_name = RPG.spell_gui_frame_name
 
 local travelings = {
     'bzzZZrrt',
@@ -106,7 +107,7 @@ end
 local function level_up(player)
     local rpg_t = RPG.get('rpg_t')
     local RPG_GUI = package.loaded['rpg.gui']
-    local names = RPG.auto_allocate_nodes
+    local names = RPG.auto_allocate_nodes_func
 
     local distribute_points_gain = 0
     for i = rpg_t[player.index].level + 1, #experience_levels, 1 do
@@ -122,7 +123,6 @@ local function level_up(player)
     end
     RPG_GUI.draw_level_text(player)
     rpg_t[player.index].points_to_distribute = rpg_t[player.index].points_to_distribute + distribute_points_gain
-    RPG_GUI.update_char_button(player)
     if rpg_t[player.index].allocate_index ~= 1 then
         local node = rpg_t[player.index].allocate_index
         local index = names[node]:lower()
@@ -132,6 +132,8 @@ local function level_up(player)
             rpg_t[player.index].total = rpg_t[player.index].total + distribute_points_gain
         end
         RPG_GUI.update_player_stats(player)
+    else
+        RPG_GUI.update_char_button(player)
     end
     if player.gui.screen[main_frame_name] then
         RPG_GUI.toggle(player, true)
@@ -178,8 +180,7 @@ function Public.suicidal_comfylatron(pos, surface)
             text = text
         }
     )
-    local nearest_player_unit =
-        surface.find_nearest_enemy({position = e.position, max_distance = 512, force = 'player'})
+    local nearest_player_unit = surface.find_nearest_enemy({position = e.position, max_distance = 512, force = 'player'})
 
     if nearest_player_unit and nearest_player_unit.active and nearest_player_unit.force.name ~= 'player' then
         e.set_command(
@@ -238,14 +239,26 @@ function Public.update_mana(player)
         return
     end
 
-    if player.gui.screen[main_frame_name] then
-        local f = player.gui.screen[main_frame_name]
-        local data = Gui.get_data(f)
-        if not data then
-            return
+    local gui = player.gui
+
+    if gui then
+        if gui.screen[main_frame_name] then
+            local f = gui.screen[main_frame_name]
+            local data = Gui.get_data(f)
+            if data.mana and data.mana.valid then
+                data.mana.caption = rpg_t[player.index].mana
+            end
         end
-        if data.mana and data.mana.valid then
-            data.mana.caption = rpg_t[player.index].mana
+        if gui.screen[spell_gui_frame_name] then
+            local f = gui.screen[spell_gui_frame_name]
+            if f['spell_table'] then
+                if f['spell_table']['mana'] then
+                    f['spell_table']['mana'].caption = math.floor(rpg_t[player.index].mana)
+                end
+                if f['spell_table']['maxmana'] then
+                    f['spell_table']['maxmana'].caption = math.floor(rpg_t[player.index].mana_max)
+                end
+            end
         end
     end
 
@@ -294,6 +307,18 @@ function Public.reward_mana(player, mana_to_add)
             data.mana.caption = rpg_t[player.index].mana
         end
     end
+    if player.gui.screen[spell_gui_frame_name] then
+        local f = player.gui.screen[spell_gui_frame_name]
+        if f['spell_table'] then
+            if f['spell_table']['mana'] then
+                f['spell_table']['mana'].caption = math.floor(rpg_t[player.index].mana)
+            end
+            if f['spell_table']['maxmana'] then
+                f['spell_table']['maxmana'].caption = math.floor(rpg_t[player.index].mana_max)
+            end
+        end
+    end
+
     if rpg_t[player.index].mana_max < 1 then
         return
     end
@@ -325,9 +350,6 @@ function Public.update_health(player)
     if player.gui.screen[main_frame_name] then
         local f = player.gui.screen[main_frame_name]
         local data = Gui.get_data(f)
-        if not data then
-            return
-        end
         if data.health and data.health.valid then
             data.health.caption = (round(player.character.health * 10) / 10)
         end
@@ -348,11 +370,7 @@ function Public.update_health(player)
 
     if rpg_extra.enable_health_and_mana_bars then
         if rpg_t[player.index].show_bars then
-            local max_life =
-                math.floor(
-                player.character.prototype.max_health + player.character_health_bonus +
-                    player.force.character_health_bonus
-            )
+            local max_life = math.floor(player.character.prototype.max_health + player.character_health_bonus + player.force.character_health_bonus)
             if not rpg_t[player.index].health_bar then
                 rpg_t[player.index].health_bar = create_healthbar(player, 0.5)
             elseif not rendering.is_valid(rpg_t[player.index].health_bar) then
@@ -406,36 +424,28 @@ end
 
 function Public.level_up_effects(player)
     local position = {x = player.position.x - 0.75, y = player.position.y - 1}
-    player.surface.create_entity(
-        {name = 'flying-text', position = position, text = '+LVL ', color = level_up_floating_text_color}
-    )
+    player.surface.create_entity({name = 'flying-text', position = position, text = '+LVL ', color = level_up_floating_text_color})
     local b = 0.75
     for _ = 1, 5, 1 do
         local p = {
             (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
             position.y + (b * -1 + math.random(0, b * 20) * 0.1)
         }
-        player.surface.create_entity(
-            {name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}}
-        )
+        player.surface.create_entity({name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}})
     end
     player.play_sound {path = 'utility/achievement_unlocked', volume_modifier = 0.40}
 end
 
 function Public.xp_effects(player)
     local position = {x = player.position.x - 0.75, y = player.position.y - 1}
-    player.surface.create_entity(
-        {name = 'flying-text', position = position, text = '+XP', color = level_up_floating_text_color}
-    )
+    player.surface.create_entity({name = 'flying-text', position = position, text = '+XP', color = level_up_floating_text_color})
     local b = 0.75
     for _ = 1, 5, 1 do
         local p = {
             (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
             position.y + (b * -1 + math.random(0, b * 20) * 0.1)
         }
-        player.surface.create_entity(
-            {name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}}
-        )
+        player.surface.create_entity({name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}})
     end
     player.play_sound {path = 'utility/achievement_unlocked', volume_modifier = 0.40}
 end
@@ -447,7 +457,7 @@ end
 
 function Public.get_heal_modifier(player)
     local rpg_t = RPG.get('rpg_t')
-    return (rpg_t[player.index].vitality - 10) * 0.02
+    return (rpg_t[player.index].vitality - 10) * 0.06
 end
 
 function Public.get_mana_modifier(player)
@@ -478,6 +488,13 @@ function Public.get_one_punch_chance(player)
     return chance
 end
 
+function Public.get_extra_following_robots(player)
+    local rpg_t = RPG.get('rpg_t')
+    local strength = rpg_t[player.index].strength
+    local count = round(strength / 2 * 0.03, 3)
+    return count
+end
+
 function Public.get_magicka(player)
     local rpg_t = RPG.get('rpg_t')
     return (rpg_t[player.index].magicka - 10) * 0.10
@@ -485,7 +502,7 @@ end
 
 --- Gives connected player some bonus xp if the map was preemptively shut down.
 -- amount (integer) -- 10 levels
--- local Public = require 'modules.rpg_v2' Public.give_xp(512)
+-- local Public = require 'modules.rpg.functions' Public.give_xp(512)
 function Public.give_xp(amount)
     for _, player in pairs(game.connected_players) do
         if not Public.validate_player(player) then
@@ -496,6 +513,10 @@ function Public.give_xp(amount)
 end
 
 function Public.rpg_reset_player(player, one_time_reset)
+    -- if not player.character then
+    --     player.set_controller({type = defines.controllers.god})
+    --     player.create_character()
+    -- end
     local RPG_GUI = package.loaded['rpg.gui']
     local rpg_t = RPG.get('rpg_t')
     local rpg_extra = RPG.get('rpg_extra')
@@ -518,8 +539,12 @@ function Public.rpg_reset_player(player, one_time_reset)
             mana_max = 0,
             last_spawned = 0,
             dropdown_select_index = 1,
+            dropdown_select_index1 = 1,
+            dropdown_select_index2 = 1,
+            dropdown_select_index3 = 1,
             allocate_index = 1,
             flame_boots = false,
+            explosive_bullets = false,
             enable_entity_spawn = false,
             health_bar = rpg_t[player.index].health_bar,
             mana_bar = rpg_t[player.index].mana_bar,
@@ -550,8 +575,12 @@ function Public.rpg_reset_player(player, one_time_reset)
             mana_max = 0,
             last_spawned = 0,
             dropdown_select_index = 1,
+            dropdown_select_index1 = 1,
+            dropdown_select_index2 = 1,
+            dropdown_select_index3 = 1,
             allocate_index = 1,
             flame_boots = false,
+            explosive_bullets = false,
             enable_entity_spawn = false,
             points_to_distribute = 0,
             last_floaty_text = visuals_delay,
@@ -630,6 +659,14 @@ function Public.gain_xp(player, amount, added_to_pool, text)
         return
     end
 
+    local f = player.gui.screen[main_frame_name]
+    if f and f.valid then
+        local d = Gui.get_data(f)
+        if d.exp_gui and d.exp_gui.valid then
+            d.exp_gui.caption = math.floor(rpg_t[player.index].xp)
+        end
+    end
+
     if rpg_t[player.index].xp >= experience_levels[rpg_t[player.index].level + 1] then
         level_up(player)
     end
@@ -693,7 +730,7 @@ function Public.global_pool(players, count)
                 RPG.debug_log('RPG - player capped: ' .. p.name .. '. Amount to pool:' .. share)
             end
         else
-            local message = ({'rpg_functions.pool_reward'})
+            local message = ({'rpg_functions.pool_reward', p.name})
             Alert.alert_player_warning(p, 10, message)
             share = share / 10
             rpg_extra.leftover_pool = rpg_extra.leftover_pool + share

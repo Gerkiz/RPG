@@ -1,7 +1,7 @@
 -- one table to rule them all!
 local Global = require 'utils.global'
-local Event = require 'utils.event'
 local Spells = require 'rpg.spells'
+local Event = require 'utils.event'
 local Gui = require 'utils.gui'
 
 local this = {
@@ -17,6 +17,11 @@ local discard_button_name = Gui.uid_name()
 local draw_main_frame_name = Gui.uid_name()
 local main_frame_name = Gui.uid_name()
 local settings_button_name = Gui.uid_name()
+local spell_gui_button_name = Gui.uid_name()
+local spell_gui_frame_name = Gui.uid_name()
+local spell1_button_name = Gui.uid_name()
+local spell2_button_name = Gui.uid_name()
+local spell3_button_name = Gui.uid_name()
 
 Global.register(
     this,
@@ -31,8 +36,7 @@ Public.points_per_level = 5
 
 Public.experience_levels = {0}
 for a = 1, 9999, 1 do
-    Public.experience_levels[#Public.experience_levels + 1] =
-        Public.experience_levels[#Public.experience_levels] + a * 8
+    Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] + a * 8
 end
 
 Public.die_cause = {
@@ -60,6 +64,14 @@ Public.classes = {
 }
 
 Public.auto_allocate_nodes = {
+    {'allocations.deactivated'},
+    {'allocations.str'},
+    {'allocations.mag'},
+    {'allocations.dex'},
+    {'allocations.vit'}
+}
+
+Public.auto_allocate_nodes_func = {
     'Deactivated',
     'Strength',
     'Magicka',
@@ -78,17 +90,30 @@ function Public.reset_table()
     this.rpg_extra.turret_kills_to_global_pool = true
     this.rpg_extra.difficulty = false
     this.rpg_extra.surface_name = 'nauvis'
-    this.rpg_extra.enable_health_and_mana_bars = false
-    this.rpg_extra.enable_mana = false
-    this.rpg_extra.mana_limit = 1500
-    this.rpg_extra.enable_wave_defense = false
-    this.rpg_extra.enable_flame_boots = false
+    this.rpg_extra.enable_health_and_mana_bars = true
+    this.rpg_extra.enable_mana = true
+    this.rpg_extra.mana_limit = 2500
+    this.rpg_extra.enable_wave_defense = true
+    this.rpg_extra.enable_flame_boots = true
+    this.rpg_extra.enable_explosive_bullets = true
+    this.rpg_extra.enable_explosive_bullets_globally = false
     this.rpg_extra.mana_per_tick = 0.1
-    this.rpg_extra.force_mana_per_tick = false
-    this.rpg_extra.enable_stone_path = false
+    this.rpg_extra.force_mana_per_tick = true
+    this.rpg_extra.enable_stone_path = true
     this.rpg_extra.enable_auto_allocate = true
     this.rpg_extra.enable_one_punch = true
     this.rpg_extra.enable_one_punch_globally = false
+    this.rpg_extra.tweaked_crafting_items = {
+        ['red-wire'] = true,
+        ['green-wire'] = true,
+        ['stone-furnace'] = true,
+        ['wooden-chest'] = true,
+        ['copper-cable'] = true,
+        ['iron-stick'] = true,
+        ['iron-gear-wheel'] = true,
+        ['pipe'] = true
+    }
+    this.tweaked_crafting_items_enabled = false
     this.rpg_t = {}
     this.rpg_extra.rpg_xp_yield = {
         ['behemoth-biter'] = 16,
@@ -118,6 +143,39 @@ function Public.get(key)
         return this[key]
     else
         return this
+    end
+end
+
+--- Gets value from player rpg_t table
+---@param key <string>
+---@param value <string>
+function Public.get_value_from_player(key, value)
+    if key and value then
+        if (this.rpg_t[key] and this.rpg_t[key][value]) then
+            return this.rpg_t[key][value]
+        end
+        return false
+    end
+    if key then
+        if this.rpg_t[key] then
+            return this.rpg_t[key]
+        end
+        return false
+    end
+    return false
+end
+
+--- Sets value to player rpg_t table
+---@param key <string>
+---@param value <string>
+---@param setter <string>
+function Public.set_value_to_player(key, value, setter)
+    if key and value then
+        if (this.rpg_t[key] and this.rpg_t[key][value]) then
+            this.rpg_t[key][value] = setter or false
+        elseif (this.rpg_t[key] and not this.rpg_t[key][value]) then
+            this.rpg_t[key][value] = setter or false
+        end
     end
 end
 
@@ -211,6 +269,40 @@ function Public.enable_flame_boots(value)
     end
 
     return this.rpg_extra.enable_flame_boots
+end
+
+--- Enables/disabled explosive bullets globally.
+---@param value <boolean>
+function Public.enable_explosive_bullets_globally(value)
+    if value then
+        this.rpg_extra.enable_explosive_bullets_globally = value
+    else
+        this.rpg_extra.enable_explosive_bullets_globally = false
+    end
+
+    return this.rpg_extra.enable_explosive_bullets_globally
+end
+
+--- Fetches if the explosive bullets module is activated globally.
+function Public.get_explosive_bullets()
+    return this.rpg_extra.enable_explosive_bullets_globally
+end
+
+--- Enables/disabled explosive bullets.
+---@param value <boolean>
+function Public.enable_explosive_bullets(value)
+    if value then
+        this.rpg_extra.enable_explosive_bullets = value
+    else
+        this.rpg_extra.enable_explosive_bullets = false
+    end
+
+    return this.rpg_extra.enable_explosive_bullets
+end
+
+--- Fetches if the explosive bullets module is activated.
+function Public.get_explosive_bullets()
+    return this.rpg_extra.enable_explosive_bullets
 end
 
 --- Enables/disabled personal tax.
@@ -385,6 +477,20 @@ function Public.disable_cooldowns_on_spells()
     return new_spells
 end
 
+function Public.tweaked_crafting_items(tbl)
+    if not tbl then
+        return
+    end
+
+    if type(type) ~= 'table' then
+        return
+    end
+
+    this.tweaked_crafting_items = tbl
+
+    return this.tweaked_crafting_items
+end
+
 Public.get_projectiles = Spells.projectile_types
 Public.settings_frame_name = settings_frame_name
 Public.save_button_name = save_button_name
@@ -392,10 +498,16 @@ Public.discard_button_name = discard_button_name
 Public.draw_main_frame_name = draw_main_frame_name
 Public.main_frame_name = main_frame_name
 Public.settings_button_name = settings_button_name
+Public.spell_gui_button_name = spell_gui_button_name
+Public.spell_gui_frame_name = spell_gui_frame_name
+Public.spell1_button_name = spell1_button_name
+Public.spell2_button_name = spell2_button_name
+Public.spell3_button_name = spell3_button_name
 
 local on_init = function()
     Public.reset_table()
 end
 
 Event.on_init(on_init)
+
 return Public

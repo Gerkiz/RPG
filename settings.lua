@@ -13,6 +13,12 @@ data:extend {
     },
     {
         type = 'bool-setting',
+        name = 'comfy_enable_explosive_bullets',
+        setting_type = 'runtime-global',
+        default_value = true
+    },
+    {
+        type = 'bool-setting',
         name = 'comfy_enable_mana',
         setting_type = 'runtime-global',
         default_value = true
