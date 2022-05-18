@@ -25,28 +25,11 @@ data:extend {
     },
     {
         type = 'bool-setting',
-        name = 'comfy_enable_flame_boots',
-        setting_type = 'runtime-global',
-        default_value = true
-    },
-    {
-        type = 'bool-setting',
         name = 'comfy_enable_stone_path',
         setting_type = 'runtime-global',
         default_value = true
     },
-    {
-        type = 'bool-setting',
-        name = 'comfy_enable_one_punch_globally',
-        setting_type = 'runtime-global',
-        default_value = true
-    },
-    {
-        type = 'bool-setting',
-        name = 'comfy_disable_spell_cooldown',
-        setting_type = 'runtime-global',
-        default_value = true
-    },
+
     {
         type = 'double-setting',
         name = 'comfy_personal_tax_rate',

@@ -1,10 +1,28 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.8
+Date: 2022-05-18
+  Added:
+    - Fixed wrong version on changelog.
+---------------------------------------------------------------------------------------------------
+Version: 1.0.7
+Date: 2022-05-18
+  Added:
+    - Added remote call:
+      - /c remote.call("RPG", "rpg_reset_player", "%playername")
+        - Resets a given player.
+      - /c remote.call("RPG", "give_xp", 1337)
+        - Gives XP to all connected players.
+      - /c remote.call("RPG", "gain_xp", "Gerkiz", 1337)
+        - Gives XP to a given connected player.
+    - Fixed an issue where if you loaded this mod after a world was created then player modifiers were not applied.
+    - Various changes and improvements.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.6
 Date: 2021-03-11
   Added:
     - Added command to view stats.
       - /stats <playerName>
-    - Various changes and improvments.
+    - Various changes and improvements.
     - Added explosive bullets.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.5

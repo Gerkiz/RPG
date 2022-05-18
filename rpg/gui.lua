@@ -1,37 +1,36 @@
+local ComfyGui = require 'utils.gui'
 local P = require 'utils.player_modifiers'
 local Gui = require 'utils.gui'
+local Color = require 'utils.color_presets'
 
 --RPG Modules
-local Functions = require 'rpg.functions'
-local RPG = require 'rpg.table'
-local Settings = require 'rpg.settings'
-
-local Public = {}
-
-local classes = RPG.classes
+local Public = require 'rpg.table'
+local classes = Public.classes
 
 --RPG Settings
-local experience_levels = RPG.experience_levels
+local experience_levels = Public.experience_levels
 
 --RPG Frames
-local main_frame_name = RPG.main_frame_name
-local draw_main_frame_name = RPG.draw_main_frame_name
-local settings_button_name = RPG.settings_button_name
-local settings_frame_name = RPG.settings_frame_name
-local discard_button_name = RPG.discard_button_name
-local save_button_name = RPG.save_button_name
-local spell_gui_button_name = RPG.spell_gui_button_name
-local spell_gui_frame_name = RPG.spell_gui_frame_name
-local spell1_button_name = RPG.spell1_button_name
-local spell2_button_name = RPG.spell2_button_name
-local spell3_button_name = RPG.spell3_button_name
+local main_frame_name = Public.main_frame_name
+local draw_main_frame_name = Public.draw_main_frame_name
+local close_main_frame_name = Public.close_main_frame_name
+local settings_button_name = Public.settings_button_name
+local settings_tooltip_frame = Public.settings_tooltip_frame
+local close_settings_tooltip_frame = Public.close_settings_tooltip_frame
+local settings_tooltip_name = Public.settings_tooltip_name
+local settings_frame_name = Public.settings_frame_name
+local discard_button_name = Public.discard_button_name
+local save_button_name = Public.save_button_name
+local enable_spawning_frame_name = Public.enable_spawning_frame_name
+local spell_gui_button_name = Public.spell_gui_button_name
+local spell_gui_frame_name = Public.spell_gui_frame_name
+local spell1_button_name = Public.spell1_button_name
+local spell2_button_name = Public.spell2_button_name
+local spell3_button_name = Public.spell3_button_name
 
 local sub = string.sub
-
-local round = function(num, idp)
-    local mult = 10 ^ (idp or 0)
-    return math.floor(num * mult + 0.5) / mult
-end
+local round = math.round
+local floor = math.floor
 
 function Public.draw_gui_char_button(player)
     if player.gui.top[draw_main_frame_name] then
@@ -48,11 +47,11 @@ function Public.draw_gui_char_button(player)
 end
 
 function Public.update_char_button(player)
-    local rpg_t = RPG.get('rpg_t')
+    local rpg_t = Public.get_value_from_player(player.index)
     if not player.gui.top[draw_main_frame_name] then
         Public.draw_gui_char_button(player)
     end
-    if rpg_t[player.index].points_to_distribute > 0 then
+    if rpg_t.points_left > 0 then
         player.gui.top[draw_main_frame_name].style.font_color = {245, 0, 0}
     else
         player.gui.top[draw_main_frame_name].style.font_color = {175, 175, 175}
@@ -60,13 +59,13 @@ function Public.update_char_button(player)
 end
 
 local function get_class(player)
-    local rpg_t = RPG.get('rpg_t')
-    local average = (rpg_t[player.index].strength + rpg_t[player.index].magicka + rpg_t[player.index].dexterity + rpg_t[player.index].vitality) / 4
+    local rpg_t = Public.get_value_from_player(player.index)
+    local average = (rpg_t.strength + rpg_t.magicka + rpg_t.dexterity + rpg_t.vitality) / 4
     local high_attribute = 0
     local high_attribute_name = ''
     for _, attribute in pairs({'strength', 'magicka', 'dexterity', 'vitality'}) do
-        if rpg_t[player.index][attribute] > high_attribute then
-            high_attribute = rpg_t[player.index][attribute]
+        if rpg_t[attribute] > high_attribute then
+            high_attribute = rpg_t[attribute]
             high_attribute_name = attribute
         end
     end
@@ -105,25 +104,11 @@ local function add_gui_stat(element, value, width, tooltip, name, color)
     return e
 end
 
-local function add_elem_stat(element, value, width, height, font, tooltip, name, color)
-    local e = element.add({type = 'sprite-button', name = name or nil, caption = value})
-    e.tooltip = tooltip or ''
-    e.style.maximal_width = width
-    e.style.minimal_width = width
-    e.style.maximal_height = height
-    e.style.minimal_height = height
-    e.style.font = font or 'default-bold'
-    e.style.horizontal_align = 'center'
-    e.style.vertical_align = 'center'
-    e.style.font_color = color or {222, 222, 222}
-    return e
-end
-
 local function add_gui_increase_stat(element, name, player)
-    local rpg_t = RPG.get('rpg_t')
+    local rpg_t = Public.get_value_from_player(player.index)
     local sprite = 'virtual-signal/signal-red'
     local symbol = '✚'
-    if rpg_t[player.index].points_to_distribute <= 0 then
+    if rpg_t.points_left <= 0 then
         sprite = 'virtual-signal/signal-black'
     end
     local e = element.add({type = 'sprite-button', name = name, caption = symbol, sprite = sprite})
@@ -137,7 +122,7 @@ local function add_gui_increase_stat(element, name, player)
     e.style.vertical_align = 'center'
     e.style.padding = 0
     e.style.margin = 0
-    e.tooltip = ({'rpg_gui.allocate_info', tostring(RPG.points_per_level)})
+    e.tooltip = ({'rpg_gui.allocate_info', tostring(Public.points_per_level)})
 
     return e
 end
@@ -150,9 +135,9 @@ local function add_separator(element, width)
     return e
 end
 
-local function remove_settings_frame(settings_frame)
-    Gui.remove_data_recursively(settings_frame)
-    settings_frame.destroy()
+local function remove_target_frame(target_frame)
+    Gui.remove_data_recursively(target_frame)
+    target_frame.destroy()
 end
 
 local function remove_main_frame(main_frame, screen)
@@ -161,7 +146,7 @@ local function remove_main_frame(main_frame, screen)
 
     local settings_frame = screen[settings_frame_name]
     if settings_frame and settings_frame.valid then
-        remove_settings_frame(settings_frame)
+        remove_target_frame(settings_frame)
     end
 end
 
@@ -170,15 +155,8 @@ local function draw_main_frame(player, location)
         return
     end
 
-    local main_frame =
-        player.gui.screen.add(
-        {
-            type = 'frame',
-            name = main_frame_name,
-            caption = 'RPG',
-            direction = 'vertical'
-        }
-    )
+    local main_frame, inside_frame = Gui.add_main_frame_with_toolbar(player, 'screen', main_frame_name, settings_button_name, close_main_frame_name, 'RPG')
+
     if location then
         main_frame.location = location
     else
@@ -186,26 +164,11 @@ local function draw_main_frame(player, location)
     end
 
     local data = {}
-    local rpg_extra = RPG.get('rpg_extra')
-    local rpg_t = RPG.get('rpg_t')
-
-    local inside_frame =
-        main_frame.add {
-        type = 'frame',
-        style = 'deep_frame_in_shallow_frame'
-    }
-    local inside_frame_style = inside_frame.style
-    inside_frame_style.padding = 0
-    inside_frame_style.maximal_height = 800
-
-    local inside_table =
-        inside_frame.add {
-        type = 'table',
-        column_count = 1
-    }
+    local rpg_extra = Public.get('rpg_extra')
+    local rpg_t = Public.get_value_from_player(player.index)
 
     local scroll_pane =
-        inside_table.add {
+        inside_frame.add {
         type = 'scroll-pane',
         vertical_scroll_policy = 'never',
         horizontal_scroll_policy = 'never'
@@ -225,8 +188,6 @@ local function draw_main_frame(player, location)
     local rank = add_gui_stat(main_table, get_class(player), 200, ({'rpg_gui.class_info', get_class(player)}))
     rank.style.font = 'default-large-bold'
 
-    add_elem_stat(main_table, ({'rpg_gui.settings_name'}), 200, 35, nil, ({'rpg_gui.settings_frame'}), settings_button_name)
-
     add_separator(scroll_pane, 400)
 
     --!sub top table
@@ -235,21 +196,21 @@ local function draw_main_frame(player, location)
 
     add_gui_description(scroll_table, ({'rpg_gui.level_name'}), 80)
     if rpg_extra.level_limit_enabled then
-        local level_tooltip = ({'rpg_gui.level_limit', Functions.level_limit_exceeded(player, true)})
-        add_gui_stat(scroll_table, rpg_t[player.index].level, 80, level_tooltip)
+        local level_tooltip = ({'rpg_gui.level_limit', Public.level_limit_exceeded(player, true)})
+        add_gui_stat(scroll_table, rpg_t.level, 80, level_tooltip)
     else
-        add_gui_stat(scroll_table, rpg_t[player.index].level, 80)
+        add_gui_stat(scroll_table, rpg_t.level, 80)
     end
 
     add_gui_description(scroll_table, ({'rpg_gui.experience_name'}), 100)
-    local exp_gui = add_gui_stat(scroll_table, math.floor(rpg_t[player.index].xp), 125, ({'rpg_gui.gain_info_tooltip'}))
+    local exp_gui = add_gui_stat(scroll_table, floor(rpg_t.xp), 125, ({'rpg_gui.gain_info_tooltip'}))
     data.exp_gui = exp_gui
 
     add_gui_description(scroll_table, ' ', 75)
     add_gui_description(scroll_table, ' ', 75)
 
     add_gui_description(scroll_table, ({'rpg_gui.next_level_name'}), 100)
-    add_gui_stat(scroll_table, experience_levels[rpg_t[player.index].level + 1], 125, ({'rpg_gui.gain_info_tooltip'}))
+    add_gui_stat(scroll_table, experience_levels[rpg_t.level + 1], 125, ({'rpg_gui.gain_info_tooltip'}))
 
     add_separator(scroll_pane, 400)
 
@@ -262,24 +223,24 @@ local function draw_main_frame(player, location)
     local w2 = 63
 
     add_gui_description(left_bottom_table, ({'rpg_gui.strength_name'}), w1, ({'rpg_gui.strength_tooltip'}))
-    add_gui_stat(left_bottom_table, rpg_t[player.index].strength, w2, ({'rpg_gui.strength_tooltip'}))
+    add_gui_stat(left_bottom_table, rpg_t.strength, w2, ({'rpg_gui.strength_tooltip'}))
     add_gui_increase_stat(left_bottom_table, 'strength', player)
 
     add_gui_description(left_bottom_table, ({'rpg_gui.magic_name'}), w1, ({'rpg_gui.magic_tooltip'}))
-    add_gui_stat(left_bottom_table, rpg_t[player.index].magicka, w2, ({'rpg_gui.magic_tooltip'}))
+    add_gui_stat(left_bottom_table, rpg_t.magicka, w2, ({'rpg_gui.magic_tooltip'}))
     add_gui_increase_stat(left_bottom_table, 'magicka', player)
 
     add_gui_description(left_bottom_table, ({'rpg_gui.dexterity_name'}), w1, ({'rpg_gui.dexterity_tooltip'}))
-    add_gui_stat(left_bottom_table, rpg_t[player.index].dexterity, w2, ({'rpg_gui.dexterity_tooltip'}))
+    add_gui_stat(left_bottom_table, rpg_t.dexterity, w2, ({'rpg_gui.dexterity_tooltip'}))
 
     add_gui_increase_stat(left_bottom_table, 'dexterity', player)
 
     add_gui_description(left_bottom_table, ({'rpg_gui.vitality_name'}), w1, ({'rpg_gui.vitality_tooltip'}))
-    add_gui_stat(left_bottom_table, rpg_t[player.index].vitality, w2, ({'rpg_gui.vitality_tooltip'}))
+    add_gui_stat(left_bottom_table, rpg_t.vitality, w2, ({'rpg_gui.vitality_tooltip'}))
     add_gui_increase_stat(left_bottom_table, 'vitality', player)
 
     add_gui_description(left_bottom_table, ({'rpg_gui.points_to_dist'}), w1)
-    add_gui_stat(left_bottom_table, rpg_t[player.index].points_to_distribute, w2, nil, nil, {200, 0, 0})
+    add_gui_stat(left_bottom_table, rpg_t.points_left, w2, nil, nil, {200, 0, 0})
     add_gui_description(left_bottom_table, ' ', w2)
 
     add_gui_description(left_bottom_table, ' ', 40)
@@ -287,14 +248,9 @@ local function draw_main_frame(player, location)
     add_gui_description(left_bottom_table, ' ', 40)
 
     add_gui_description(left_bottom_table, ({'rpg_gui.life_name'}), w1, ({'rpg_gui.life_tooltip'}))
-    local health_gui = add_gui_stat(left_bottom_table, math.floor(player.character.health), w2, ({'rpg_gui.life_increase'}))
+    local health_gui = add_gui_stat(left_bottom_table, floor(player.character.health), w2, ({'rpg_gui.life_increase'}))
     data.health = health_gui
-    add_gui_stat(
-        left_bottom_table,
-        math.floor(player.character.prototype.max_health + player.character_health_bonus + player.force.character_health_bonus),
-        w2,
-        ({'rpg_gui.life_maximum'})
-    )
+    add_gui_stat(left_bottom_table, floor(player.character.prototype.max_health + player.character_health_bonus + player.force.character_health_bonus), w2, ({'rpg_gui.life_maximum'}))
 
     local shield = 0
     local shield_max = 0
@@ -305,8 +261,8 @@ local function draw_main_frame(player, location)
     local i = player.character.get_inventory(defines.inventory.character_armor)
     if not i.is_empty() then
         if i[1].grid then
-            shield = math.floor(i[1].grid.shield)
-            shield_max = math.floor(i[1].grid.max_shield)
+            shield = floor(i[1].grid.shield)
+            shield_max = floor(i[1].grid.max_shield)
             shield_desc_tip = ({'rpg_gui.shield_tooltip'})
             shield_tip = ({'rpg_gui.shield_current'})
             shield_max_tip = ({'rpg_gui.shield_max'})
@@ -324,14 +280,14 @@ local function draw_main_frame(player, location)
     end
 
     if rpg_extra.enable_mana then
-        local mana = rpg_t[player.index].mana
-        local mana_max = rpg_t[player.index].mana_max
+        local mana = rpg_t.mana
+        local mana_max = rpg_t.mana_max
 
         local mana_tip = ({'rpg_gui.mana_tooltip'})
         add_gui_description(left_bottom_table, ({'rpg_gui.mana_name'}), w1, mana_tip)
         local mana_regen_tip = ({'rpg_gui.mana_regen_current'})
         local mana_max_regen_tip
-        if rpg_t[player.index].mana_max >= rpg_extra.mana_limit then
+        if rpg_t.mana_max >= rpg_extra.mana_limit then
             mana_max_regen_tip = ({'rpg_gui.mana_max_limit'})
         else
             mana_max_regen_tip = ({'rpg_gui.mana_max'})
@@ -357,17 +313,17 @@ local function draw_main_frame(player, location)
 
     add_gui_description(right_bottom_table, ' ', w0)
     add_gui_description(right_bottom_table, ({'rpg_gui.melee_name'}), w1)
-    local melee_damage_value = round(100 * (1 + Functions.get_melee_modifier(player))) .. '%'
+    local melee_damage_value = round(100 * (1 + Public.get_melee_modifier(player))) .. '%'
     local melee_damage_tooltip
-    if rpg_extra.enable_one_punch then
+    if rpg_extra.enable_aoe_punch then
         melee_damage_tooltip = ({
-            'rpg_gui.one_punch_chance',
-            Functions.get_life_on_hit(player),
-            Functions.get_one_punch_chance(player),
-            Functions.get_extra_following_robots(player)
+            'rpg_gui.aoe_punch_chance',
+            Public.get_life_on_hit(player),
+            Public.get_aoe_punch_chance(player),
+            Public.get_extra_following_robots(player)
         })
     else
-        melee_damage_tooltip = ({'rpg_gui.one_punch_disabled'})
+        melee_damage_tooltip = ({'rpg_gui.aoe_punch_disabled'})
     end
     add_gui_stat(right_bottom_table, melee_damage_value, w2, melee_damage_tooltip)
 
@@ -384,7 +340,7 @@ local function draw_main_frame(player, location)
         player.character_loot_pickup_distance_bonus,
         player.character_item_pickup_distance_bonus,
         player.character_resource_reach_distance_bonus,
-        Functions.get_magicka(player)
+        Public.get_magicka(player)
     })
 
     add_gui_description(right_bottom_table, ' ', w0)
@@ -408,17 +364,17 @@ local function draw_main_frame(player, location)
     add_gui_description(right_bottom_table, ' ', w0)
     add_gui_description(right_bottom_table, ({'rpg_gui.health_bonus_name'}), w1)
     local health_bonus_value = '+ ' .. round((player.force.character_health_bonus + player.character_health_bonus))
-    local health_tooltip = ({'rpg_gui.health_tooltip', Functions.get_heal_modifier(player)})
+    local health_tooltip = ({'rpg_gui.health_tooltip', Public.get_heal_modifier(player)})
     add_gui_stat(right_bottom_table, health_bonus_value, w2, health_tooltip)
 
     add_gui_description(right_bottom_table, ' ', w0)
 
     if rpg_extra.enable_mana then
         add_gui_description(right_bottom_table, ({'rpg_gui.mana_bonus'}), w1)
-        local mana_bonus_value = '+ ' .. (math.floor(Functions.get_mana_modifier(player) * 10) / 10)
+        local mana_bonus_value = '+ ' .. (floor(Public.get_mana_modifier(player) * 10) / 10)
         local mana_bonus_tooltip = ({
             'rpg_gui.mana_regen_bonus',
-            (math.floor(Functions.get_mana_modifier(player) * 10) / 10)
+            (floor(Public.get_mana_modifier(player) * 10) / 10)
         })
         add_gui_stat(right_bottom_table, mana_bonus_value, w2, mana_bonus_tooltip)
     end
@@ -436,16 +392,20 @@ function Public.draw_level_text(player)
         return
     end
 
-    local rpg_t = RPG.get('rpg_t')
+    local rpg_t = Public.get_value_from_player(player.index)
 
-    if rpg_t[player.index].text then
-        rendering.destroy(rpg_t[player.index].text)
-        rpg_t[player.index].text = nil
+    if not rpg_t then
+        return
+    end
+
+    if rpg_t.text then
+        rendering.destroy(rpg_t.text)
+        rpg_t.text = nil
     end
 
     local players = {}
     for _, p in pairs(game.players) do
-        if p.index ~= player.index then
+        if p.index ~= player.index then -- todo maybe remove this so the player also sees their level?
             players[#players + 1] = p.index
         end
     end
@@ -453,9 +413,9 @@ function Public.draw_level_text(player)
         return
     end
 
-    rpg_t[player.index].text =
+    rpg_t.text =
         rendering.draw_text {
-        text = 'lvl ' .. rpg_t[player.index].level,
+        text = 'lvl ' .. rpg_t.level,
         surface = player.surface,
         target = player.character,
         target_offset = {0, -3.25},
@@ -473,38 +433,6 @@ function Public.draw_level_text(player)
     }
 end
 
-function Public.update_player_stats(player)
-    local rpg_extra = RPG.get('rpg_extra')
-    local rpg_t = RPG.get('rpg_t')
-    local player_modifiers = P.get_table()
-    local strength = rpg_t[player.index].strength - 10
-    player_modifiers[player.index].character_inventory_slots_bonus['rpg'] = round(strength * 0.2, 3)
-    player_modifiers[player.index].character_mining_speed_modifier['rpg'] = round(strength * 0.007, 3)
-    player_modifiers[player.index].character_maximum_following_robot_count_bonus['rpg'] = round(strength / 2 * 0.03, 3)
-
-    local magic = rpg_t[player.index].magicka - 10
-    local v = magic * 0.22
-    player_modifiers[player.index].character_build_distance_bonus['rpg'] = math.min(60, round(v * 0.25, 3))
-    player_modifiers[player.index].character_item_drop_distance_bonus['rpg'] = math.min(60, round(v * 0.25, 3))
-    player_modifiers[player.index].character_reach_distance_bonus['rpg'] = math.min(60, round(v * 0.25, 3))
-    player_modifiers[player.index].character_loot_pickup_distance_bonus['rpg'] = math.min(20, round(v * 0.22, 3))
-    player_modifiers[player.index].character_item_pickup_distance_bonus['rpg'] = math.min(20, round(v * 0.25, 3))
-    player_modifiers[player.index].character_resource_reach_distance_bonus['rpg'] = math.min(20, round(v * 0.15, 3))
-    if rpg_t[player.index].mana_max >= rpg_extra.mana_limit then
-        rpg_t[player.index].mana_max = rpg_extra.mana_limit
-    else
-        rpg_t[player.index].mana_max = round((magic) * 2, 3)
-    end
-
-    local dexterity = rpg_t[player.index].dexterity - 10
-    player_modifiers[player.index].character_running_speed_modifier['rpg'] = round(dexterity * 0.0015, 3)
-    player_modifiers[player.index].character_crafting_speed_modifier['rpg'] = round(dexterity * 0.015, 3)
-
-    player_modifiers[player.index].character_health_bonus['rpg'] = round((rpg_t[player.index].vitality - 10) * 6, 3)
-
-    P.update_player_modifiers(player)
-end
-
 function Public.toggle(player, recreate)
     local screen = player.gui.screen
     local main_frame = screen[main_frame_name]
@@ -518,6 +446,7 @@ function Public.toggle(player, recreate)
     if main_frame then
         remove_main_frame(main_frame, screen)
     else
+        ComfyGui.clear_all_active_frames(player)
         draw_main_frame(player)
     end
 end
@@ -528,6 +457,21 @@ function Public.remove_frame(player)
 
     if main_frame then
         remove_main_frame(main_frame, screen)
+    end
+end
+
+function Public.clear_settings_frames(player)
+    local screen = player.gui.screen
+    local center = player.gui.center
+
+    local setting_tooltip_frame = center[settings_tooltip_frame]
+    local setting_frame = screen[settings_frame_name]
+
+    if setting_tooltip_frame then
+        remove_target_frame(setting_tooltip_frame)
+    end
+    if setting_frame then
+        remove_target_frame(setting_frame)
     end
 end
 
@@ -556,7 +500,6 @@ Gui.on_click(
 
         local screen = player.gui.screen
         local frame = screen[settings_frame_name]
-        local player_modifiers = P.get_table()
         local data = Gui.get_data(event.element)
         local health_bar_gui_input = data.health_bar_gui_input
         local reset_gui_input = data.reset_gui_input
@@ -566,133 +509,116 @@ Gui.on_click(
         local spell_gui_input3 = data.spell_gui_input3
         local magic_pickup_gui_input = data.magic_pickup_gui_input
         local movement_speed_gui_input = data.movement_speed_gui_input
-        local flame_boots_gui_input = data.flame_boots_gui_input
         local explosive_bullets_gui_input = data.explosive_bullets_gui_input
         local enable_entity_gui_input = data.enable_entity_gui_input
         local stone_path_gui_input = data.stone_path_gui_input
-        local one_punch_gui_input = data.one_punch_gui_input
+        local aoe_punch_gui_input = data.aoe_punch_gui_input
         local auto_allocate_gui_input = data.auto_allocate_gui_input
 
-        local rpg_t = RPG.get('rpg_t')
+        local rpg_t = Public.get_value_from_player(player.index)
 
         if frame and frame.valid then
             if auto_allocate_gui_input and auto_allocate_gui_input.valid and auto_allocate_gui_input.selected_index then
-                rpg_t[player.index].allocate_index = auto_allocate_gui_input.selected_index
+                rpg_t.allocate_index = auto_allocate_gui_input.selected_index
             end
 
-            if one_punch_gui_input and one_punch_gui_input.valid then
-                if not one_punch_gui_input.state then
-                    rpg_t[player.index].one_punch = false
-                elseif one_punch_gui_input.state then
-                    rpg_t[player.index].one_punch = true
+            if aoe_punch_gui_input and aoe_punch_gui_input.valid then
+                if not aoe_punch_gui_input.state then
+                    rpg_t.aoe_punch = false
+                elseif aoe_punch_gui_input.state then
+                    rpg_t.aoe_punch = true
                 end
             end
 
             if stone_path_gui_input and stone_path_gui_input.valid then
                 if not stone_path_gui_input.state then
-                    rpg_t[player.index].stone_path = false
+                    rpg_t.stone_path = false
                 elseif stone_path_gui_input.state then
-                    rpg_t[player.index].stone_path = true
+                    rpg_t.stone_path = true
                 end
             end
 
             if enable_entity_gui_input and enable_entity_gui_input.valid then
                 if not enable_entity_gui_input.state then
-                    rpg_t[player.index].enable_entity_spawn = false
+                    rpg_t.enable_entity_spawn = false
                 elseif enable_entity_gui_input.state then
-                    rpg_t[player.index].enable_entity_spawn = true
-                end
-            end
-
-            if flame_boots_gui_input and flame_boots_gui_input.valid then
-                if not flame_boots_gui_input.state then
-                    rpg_t[player.index].flame_boots = false
-                elseif flame_boots_gui_input.state then
-                    rpg_t[player.index].flame_boots = true
+                    rpg_t.enable_entity_spawn = true
                 end
             end
 
             if explosive_bullets_gui_input and explosive_bullets_gui_input.valid then
                 if not explosive_bullets_gui_input.state then
-                    rpg_t[player.index].explosive_bullets = false
+                    rpg_t.explosive_bullets = false
                 elseif explosive_bullets_gui_input.state then
-                    rpg_t[player.index].explosive_bullets = true
+                    rpg_t.explosive_bullets = true
                 end
             end
 
             if movement_speed_gui_input and movement_speed_gui_input.valid then
-                if not player_modifiers.disabled_modifier[player.index] then
-                    player_modifiers.disabled_modifier[player.index] = {}
-                end
                 if not movement_speed_gui_input.state then
-                    player_modifiers.disabled_modifier[player.index].character_running_speed_modifier = true
+                    P.disable_single_modifier(player, 'character_running_speed_modifier', true)
                     P.update_player_modifiers(player)
                 elseif movement_speed_gui_input.state then
-                    player_modifiers.disabled_modifier[player.index].character_running_speed_modifier = false
+                    P.disable_single_modifier(player, 'character_running_speed_modifier', false)
                     P.update_player_modifiers(player)
                 end
             end
 
             if magic_pickup_gui_input and magic_pickup_gui_input.valid then
-                if not player_modifiers.disabled_modifier[player.index] then
-                    player_modifiers.disabled_modifier[player.index] = {}
-                end
                 if not magic_pickup_gui_input.state then
-                    player_modifiers.disabled_modifier[player.index].character_item_pickup_distance_bonus = true
-                    player_modifiers.disabled_modifier[player.index].character_build_distance_bonus = true
-                    player_modifiers.disabled_modifier[player.index].character_item_drop_distance_bonus = true
-                    player_modifiers.disabled_modifier[player.index].character_reach_distance_bonus = true
-                    player_modifiers.disabled_modifier[player.index].character_loot_pickup_distance_bonus = true
-                    player_modifiers.disabled_modifier[player.index].character_item_pickup_distance_bonus = true
-                    player_modifiers.disabled_modifier[player.index].character_resource_reach_distance_bonus = true
+                    P.disable_single_modifier(player, 'character_item_pickup_distance_bonus', true)
+                    P.disable_single_modifier(player, 'character_build_distance_bonus', true)
+                    P.disable_single_modifier(player, 'character_item_drop_distance_bonus', true)
+                    P.disable_single_modifier(player, 'character_reach_distance_bonus', true)
+                    P.disable_single_modifier(player, 'character_loot_pickup_distance_bonus', true)
+                    P.disable_single_modifier(player, 'character_resource_reach_distance_bonus', true)
                     P.update_player_modifiers(player)
                 elseif magic_pickup_gui_input.state then
-                    player_modifiers.disabled_modifier[player.index].character_item_pickup_distance_bonus = false
-                    player_modifiers.disabled_modifier[player.index].character_build_distance_bonus = false
-                    player_modifiers.disabled_modifier[player.index].character_item_drop_distance_bonus = false
-                    player_modifiers.disabled_modifier[player.index].character_reach_distance_bonus = false
-                    player_modifiers.disabled_modifier[player.index].character_loot_pickup_distance_bonus = false
-                    player_modifiers.disabled_modifier[player.index].character_item_pickup_distance_bonus = false
-                    player_modifiers.disabled_modifier[player.index].character_resource_reach_distance_bonus = false
+                    P.disable_single_modifier(player, 'character_item_pickup_distance_bonus', false)
+                    P.disable_single_modifier(player, 'character_build_distance_bonus', false)
+                    P.disable_single_modifier(player, 'character_item_drop_distance_bonus', false)
+                    P.disable_single_modifier(player, 'character_reach_distance_bonus', false)
+                    P.disable_single_modifier(player, 'character_loot_pickup_distance_bonus', false)
+                    P.disable_single_modifier(player, 'character_resource_reach_distance_bonus', false)
                     P.update_player_modifiers(player)
                 end
             end
             if conjure_gui_input and conjure_gui_input.valid and conjure_gui_input.selected_index then
-                rpg_t[player.index].dropdown_select_index = conjure_gui_input.selected_index
+                rpg_t.dropdown_select_index = conjure_gui_input.selected_index
             end
             if spell_gui_input1 and spell_gui_input1.valid and spell_gui_input1.selected_index then
-                rpg_t[player.index].dropdown_select_index1 = spell_gui_input1.selected_index
+                rpg_t.dropdown_select_index1 = spell_gui_input1.selected_index
             end
             if spell_gui_input2 and spell_gui_input2.valid and spell_gui_input2.selected_index then
-                rpg_t[player.index].dropdown_select_index2 = spell_gui_input2.selected_index
+                rpg_t.dropdown_select_index2 = spell_gui_input2.selected_index
             end
             if spell_gui_input3 and spell_gui_input3.valid and spell_gui_input3.selected_index then
-                rpg_t[player.index].dropdown_select_index3 = spell_gui_input3.selected_index
+                rpg_t.dropdown_select_index3 = spell_gui_input3.selected_index
             end
             if player.gui.screen[spell_gui_frame_name] then
-                Settings.update_spell_gui(player, nil)
+                Public.update_spell_gui(player, nil)
             end
 
             if reset_gui_input and reset_gui_input.valid and reset_gui_input.state then
-                if not rpg_t[player.index].reset then
-                    rpg_t[player.index].allocate_index = 1
-                    rpg_t[player.index].reset = true
-                    Functions.rpg_reset_player(player, true)
+                if not rpg_t.reset then
+                    rpg_t.allocate_index = 1
+                    rpg_t.reset = true
+                    Public.rpg_reset_player(player, true)
                 end
             end
             if health_bar_gui_input and health_bar_gui_input.valid then
                 if not health_bar_gui_input.state then
-                    rpg_t[player.index].show_bars = false
-                    Functions.update_health(player)
-                    Functions.update_mana(player)
+                    rpg_t.show_bars = false
+                    Public.update_health(player)
+                    Public.update_mana(player)
                 elseif health_bar_gui_input.state then
-                    rpg_t[player.index].show_bars = true
-                    Functions.update_health(player)
-                    Functions.update_mana(player)
+                    rpg_t.show_bars = true
+                    Public.update_health(player)
+                    Public.update_mana(player)
                 end
             end
 
-            remove_settings_frame(event.element)
+            remove_target_frame(event.element)
 
             if player.gui.screen[main_frame_name] then
                 toggle(player, true)
@@ -711,7 +637,44 @@ Gui.on_click(
             return
         end
         if frame and frame.valid then
+            Gui.remove_data_recursively(frame)
             frame.destroy()
+        end
+    end
+)
+
+Gui.on_click(
+    close_main_frame_name,
+    function(event)
+        local player = event.player
+        local screen = player.gui.screen
+        if not player or not player.valid or not player.character then
+            return
+        end
+
+        local main_frame = screen[main_frame_name]
+        if main_frame and main_frame.valid then
+            remove_target_frame(main_frame)
+        end
+        local settings_frame = screen[settings_frame_name]
+        if settings_frame and settings_frame.valid then
+            remove_target_frame(settings_frame)
+        end
+    end
+)
+
+Gui.on_click(
+    close_settings_tooltip_frame,
+    function(event)
+        local player = event.player
+        local center = player.gui.center
+        if not player or not player.valid or not player.character then
+            return
+        end
+
+        local main_frame = center[settings_tooltip_frame]
+        if main_frame and main_frame.valid then
+            remove_target_frame(main_frame)
         end
     end
 )
@@ -726,15 +689,68 @@ Gui.on_click(
             return
         end
 
-        local surface_name = RPG.get('rpg_extra').surface_name
+        local surface_name = Public.get('rpg_extra').surface_name
         if sub(player.surface.name, 0, #surface_name) ~= surface_name then
             return
         end
 
         if frame and frame.valid then
+            Gui.remove_data_recursively(frame)
             frame.destroy()
         else
-            Settings.extra_settings(player)
+            ComfyGui.clear_all_center_frames(player)
+            Public.extra_settings(player)
+        end
+    end
+)
+
+Gui.on_click(
+    settings_tooltip_name,
+    function(event)
+        local player = event.player
+        if not player or not player.valid or not player.character then
+            return
+        end
+
+        local surface_name = Public.get('rpg_extra').surface_name
+        if sub(player.surface.name, 0, #surface_name) ~= surface_name then
+            return
+        end
+
+        local center = player.gui.center
+        local main_frame = center[settings_tooltip_frame]
+        if main_frame and main_frame.valid then
+            remove_target_frame(main_frame)
+        else
+            ComfyGui.clear_all_center_frames(player)
+            ComfyGui.clear_all_screen_frames(player)
+            Public.settings_tooltip(player)
+        end
+    end
+)
+
+Gui.on_click(
+    enable_spawning_frame_name,
+    function(event)
+        local player = event.player
+        local screen = player.gui.screen
+        local frame = screen[spell_gui_frame_name]
+        if not player or not player.valid or not player.character then
+            return
+        end
+
+        if frame and frame.valid then
+            local rpg_t = Public.get_value_from_player(player.index)
+            if not rpg_t.enable_entity_spawn then
+                player.print({'rpg_settings.cast_spell_enabled_label'}, Color.success)
+                player.play_sound({path = 'utility/armor_insert', volume_modifier = 0.75})
+                rpg_t.enable_entity_spawn = true
+            else
+                player.print({'rpg_settings.cast_spell_disabled_label'}, Color.warning)
+                player.play_sound({path = 'utility/cannot_build', volume_modifier = 0.75})
+                rpg_t.enable_entity_spawn = false
+            end
+            Public.update_spell_gui_indicator(player)
         end
     end
 )
@@ -749,15 +765,16 @@ Gui.on_click(
             return
         end
 
-        local surface_name = RPG.get('rpg_extra').surface_name
+        local surface_name = Public.get('rpg_extra').surface_name
         if sub(player.surface.name, 0, #surface_name) ~= surface_name then
             return
         end
 
         if frame and frame.valid then
+            Gui.remove_data_recursively(frame)
             frame.destroy()
         else
-            Settings.spell_gui_settings(player)
+            Public.spell_gui_settings(player)
         end
     end
 )
@@ -772,13 +789,13 @@ Gui.on_click(
             return
         end
 
-        local surface_name = RPG.get('rpg_extra').surface_name
+        local surface_name = Public.get('rpg_extra').surface_name
         if sub(player.surface.name, 0, #surface_name) ~= surface_name then
             return
         end
 
         if frame and frame.valid then
-            Settings.update_spell_gui(player, 1)
+            Public.update_spell_gui(player, 1)
         end
     end
 )
@@ -793,13 +810,13 @@ Gui.on_click(
             return
         end
 
-        local surface_name = RPG.get('rpg_extra').surface_name
+        local surface_name = Public.get('rpg_extra').surface_name
         if sub(player.surface.name, 0, #surface_name) ~= surface_name then
             return
         end
 
         if frame and frame.valid then
-            Settings.update_spell_gui(player, 2)
+            Public.update_spell_gui(player, 2)
         end
     end
 )
@@ -814,15 +831,17 @@ Gui.on_click(
             return
         end
 
-        local surface_name = RPG.get('rpg_extra').surface_name
+        local surface_name = Public.get('rpg_extra').surface_name
         if sub(player.surface.name, 0, #surface_name) ~= surface_name then
             return
         end
 
         if frame and frame.valid then
-            Settings.update_spell_gui(player, 3)
+            Public.update_spell_gui(player, 3)
         end
     end
 )
+
+ComfyGui.screen_to_bypass(spell_gui_frame_name)
 
 return Public
