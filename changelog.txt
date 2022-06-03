@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.9
+Date: 2022-06-03
+  Fixed:
+    - Fixed an issue where if you migrate to a newer version of RPG it would fail and make the buttons ingame non-clickable.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.8
 Date: 2022-05-18
   Added:

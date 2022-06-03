@@ -2,7 +2,6 @@
 local Public = require 'rpg.core'
 local Gui = require 'utils.gui'
 local Event = require 'utils.event'
-local Explosives = require 'explosives'
 
 local Math2D = require 'math2d'
 
@@ -903,7 +902,6 @@ local function on_player_used_capsule(event)
         target_pos = target_pos,
         range = range,
         tame_unit_effects = tame_unit_effects,
-        explosives = Explosives,
         rpg_t = rpg_t
     }
 

@@ -626,49 +626,7 @@ spells[#spells + 1] = {
         create_projectiles(data)
     end
 }
-spells[#spells + 1] = {
-    name = {'spells.pointy_explosives'},
-    entityName = 'pointy_explosives',
-    target = true,
-    amount = 1,
-    range = 0,
-    damage = true,
-    force = 'player',
-    level = 70,
-    type = 'special',
-    mana_cost = 100,
-    cooldown = 100,
-    enabled = true,
-    log_spell = true,
-    sprite = 'recipe/explosives',
-    special_sprite = 'recipe=explosives',
-    callback = function(data)
-        local self = data.self
-        local player = data.player
-        local Explosives = data.explosives
-        local position = data.position
 
-        local entities =
-            player.surface.find_entities_filtered {
-            force = player.force,
-            type = 'container',
-            area = {{position.x - 1, position.y - 1}, {position.x + 1, position.y + 1}}
-        }
-
-        local detonate_chest
-        for i = 1, #entities do
-            local e = entities[i]
-            detonate_chest = e
-        end
-        if detonate_chest and detonate_chest.valid then
-            local success = Explosives.detonate_chest(detonate_chest)
-            if success then
-                Public.remove_mana(player, self.mana_cost)
-            end
-            Public.cast_spell(player)
-        end
-    end
-}
 spells[#spells + 1] = {
     name = {'spells.repair_aoe'},
     entityName = 'repair_aoe',

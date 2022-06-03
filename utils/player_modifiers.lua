@@ -223,5 +223,16 @@ end
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_player_removed, on_player_removed)
+Event.on_configuration_changed(
+    function()
+        print('[Player modifiers] Migrating to new version')
+        if not this.disabled_modifier then
+            this.disabled_modifier = {}
+        end
+        if not this.rpg_inventory_slot_limit then
+            this.rpg_inventory_slot_limit = 320
+        end
+    end
+)
 
 return Public

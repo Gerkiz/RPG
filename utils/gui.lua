@@ -752,4 +752,16 @@ Public.on_click(
     end
 )
 
+Event.on_configuration_changed(
+    function()
+        print('[Gui] Migrating to new version')
+        if not settings then
+            settings = {
+                mod_gui_top_frame = false,
+                disabled_tabs = {}
+            }
+        end
+    end
+)
+
 return Public

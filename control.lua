@@ -1,7 +1,9 @@
+require 'utils.data_stages'
+_LIFECYCLE = _STAGE.control -- Control stage
 local Event = require 'utils.event'
 require 'utils.utils'
-require 'utils.player_modifiers'
 local RPG = require 'rpg.main'
+require 'utils.player_modifiers'
 
 Event.on_init(
     function()
@@ -43,10 +45,8 @@ Event.on_nth_tick(
         end
         if settings.global.comfy_enable_debug.value then
             RPG.toggle_debug(true)
-        else    
+        else
             RPG.toggle_debug(false)
         end
     end
 )
-
-require 'rpg.main'
