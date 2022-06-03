@@ -229,6 +229,9 @@ Event.on_configuration_changed(
         if not this.disabled_modifier then
             this.disabled_modifier = {}
         end
+        if not this.modifiers then
+            this.modifiers = {}
+        end
         if not this.rpg_inventory_slot_limit then
             this.rpg_inventory_slot_limit = 320
         end
