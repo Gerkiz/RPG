@@ -1,22 +1,27 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.11
+Date: 2022-06-03
+  Change:
+    - Fix broken changelog in game.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.10
 Date: 2022-06-03
-  Fixed:
+  Change:
     - Fixed an issue where player modifiers table was missing.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.9
 Date: 2022-06-03
-  Fixed:
+  Change:
     - Fixed an issue where if you migrate to a newer version of RPG it would fail and make the buttons ingame non-clickable.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.8
 Date: 2022-05-18
-  Added:
+  Change:
     - Fixed wrong version on changelog.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.7
 Date: 2022-05-18
-  Added:
+  Change:
     - Added remote call:
       - /c remote.call("RPG", "rpg_reset_player", "%playername")
         - Resets a given player.
@@ -29,7 +34,7 @@ Date: 2022-05-18
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.6
 Date: 2021-03-11
-  Added:
+  Change:
     - Added command to view stats.
       - /stats <playerName>
     - Various changes and improvements.
@@ -37,32 +42,31 @@ Date: 2021-03-11
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.5
 Date: 2020-11-24
-  Added:
+  Change:
     - Added support for 1.1
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.4
 Date: 2020-09-23
-  Added:
+  Change:
     - Disabled debug mode so we don't spam the console/factorio-current.log.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3
 Date: 2020-09-23
-  Added:
+  Change:
     - Fixed minor issue where you leveled up but did not receive any points nor did the GUI update.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.2
 Date: 2020-09-12
-  Added:
+  Change:
     - Minor tweaks.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.1
 Date: 2020-09-12
-  Added:
+  Change:
     - Minor tweaks.
     - Added auto-allocate of skills.
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2020-08-04
-  Added:
+  Change:
     - Initial commit.
----------------------------------------------------------------------------------------------------
