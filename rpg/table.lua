@@ -391,7 +391,7 @@ function Public.migrate_new_rpg_tbl(player)
     if rpg_t then
         rpg_t.flame_boots = nil
         rpg_t.one_punch = nil
-        rpg_t.points_left = rpg_t.points_to_distribute
+        rpg_t.points_left = rpg_t.points_to_distribute or 0
         rpg_t.points_to_distribute = nil
 
         rpg_t.aoe_punch = false
