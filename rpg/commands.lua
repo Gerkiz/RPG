@@ -257,6 +257,15 @@ local RPG_Interface = {
         else
             error('Remote call parameter to RPG give_xp must be a valid player name and contain amount(number) and not nil.')
         end
+    end,
+    get_global = function()
+        log(serpent.block(global.tokens))
+    end,
+    set_global = function(key, value)
+        if key and value then
+            global.tokens[key] = value
+        end
+        return global.tokens
     end
 }
 

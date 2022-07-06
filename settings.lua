@@ -7,6 +7,12 @@ data:extend {
     },
     {
         type = 'bool-setting',
+        name = 'comfy_enable_mod_gui',
+        setting_type = 'runtime-global',
+        default_value = true
+    },
+    {
+        type = 'bool-setting',
         name = 'comfy_enable_health_and_mana_bars',
         setting_type = 'runtime-global',
         default_value = true
@@ -29,7 +35,6 @@ data:extend {
         setting_type = 'runtime-global',
         default_value = true
     },
-
     {
         type = 'double-setting',
         name = 'comfy_personal_tax_rate',

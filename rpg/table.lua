@@ -162,8 +162,8 @@ function Public.get(key)
 end
 
 --- Gets value from player rpg_t table
----@param key string
----@param value string
+---@param key string|nil
+---@param value string|number|nil
 function Public.get_value_from_player(key, value)
     if key and value then
         if (this.rpg_t[key] and this.rpg_t[key][value]) then
@@ -274,6 +274,55 @@ function Public.enable_health_and_mana_bars(value)
     this.rpg_extra.enable_health_and_mana_bars = value or false
 
     return this.rpg_extra.enable_health_and_mana_bars
+end
+
+--- Toggles the mod gui state.
+---@param value boolean
+---@param read boolean
+function Public.enable_mod_gui(value, read)
+    if not read then
+        Gui.set_mod_gui_top_frame(value or false)
+    end
+
+    if Gui.get_mod_gui_top_frame() then
+        local players = game.connected_players
+        for i = 1, #players do
+            local player = players[i]
+            local top = player.gui.top
+            if top.mod_gui_top_frame and top.mod_gui_top_frame.valid then
+                top.mod_gui_top_frame.visible = true
+            end
+            for _, child in pairs(top.children) do
+                if child.caption == '[RPG]' then
+                    child.destroy()
+                    Public.draw_gui_char_button(player)
+                end
+            end
+        end
+    else
+        local players = game.connected_players
+        local count = 0
+        for i = 1, #players do
+            local player = players[i]
+            local top = Gui.get_button_flow(player)
+            for _, child in pairs(top.children) do
+                count = count + 1
+                if child.caption == '[RPG]' then
+                    child.destroy()
+                    Public.draw_gui_char_button(player)
+                end
+            end
+            if count == 0 then
+                if player.gui.top.mod_gui_top_frame and player.gui.top.mod_gui_top_frame.valid then
+                    player.gui.top.mod_gui_top_frame.visible = false
+                end
+            else
+                if player.gui.top.mod_gui_top_frame and player.gui.top.mod_gui_top_frame.valid then
+                    player.gui.top.mod_gui_top_frame.visible = true
+                end
+            end
+        end
+    end
 end
 
 --- Enables the mana feature that allows players to spawn entities.
@@ -401,13 +450,7 @@ function Public.migrate_new_rpg_tbl(player)
         }
     end
 
-    local top = player.gui.top
-    for _, child in pairs(top.children) do
-        if child.caption == '[RPG]' then
-            child.destroy()
-            Public.draw_gui_char_button(player)
-        end
-    end
+    Public.enable_mod_gui(false, true)
 
     local screen = player.gui.screen
     for _, child in pairs(screen.children) do

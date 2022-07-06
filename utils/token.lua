@@ -2,7 +2,7 @@ local Token = {}
 
 local tokens = {}
 
-local counter = 0
+local counter = 4000
 
 --- Assigns a unquie id for the given var.
 -- This function cannot be called after on_init() or on_load() has run as that is a desync risk.
@@ -11,6 +11,10 @@ local counter = 0
 -- @param  var<any>
 -- @return number the unique token for the variable.
 function Token.register(var)
+    if _LIFECYCLE == 8 then
+        error('Calling Token.register after on_init() or on_load() has run is a desync risk.', 2)
+    end
+
     counter = counter + 1
 
     tokens[counter] = var
@@ -22,26 +26,9 @@ function Token.get(token_id)
     return tokens[token_id]
 end
 
-global.tokens = {}
+local uid_counter = 2000
 
-function Token.register_global(var)
-    local c = #global.tokens + 1
-
-    global.tokens[c] = var
-
-    return c
-end
-
-function Token.get_global(token_id)
-    return global.tokens[token_id]
-end
-
-function Token.set_global(token_id, var)
-    global.tokens[token_id] = var
-end
-
-local uid_counter = 100
-
+---@return integer
 function Token.uid()
     uid_counter = uid_counter + 1
 

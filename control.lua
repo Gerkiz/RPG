@@ -16,6 +16,11 @@ RPG.disable_cooldowns_on_spells()
 Event.on_nth_tick(
     60,
     function()
+        if settings.global.comfy_enable_mod_gui.value then
+            RPG.enable_mod_gui(true)
+        else
+            RPG.enable_mod_gui(false)
+        end
         if settings.global.comfy_enable_health_and_mana_bars.value then
             RPG.enable_health_and_mana_bars(true)
         else

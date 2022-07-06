@@ -275,7 +275,7 @@ end
 ---@param player LuaPlayer
 ---@param duration number
 ---@param message string
----@param color string
+---@param color string|nil
 function Public.alert_player_warning(player, duration, message, color)
     Public.alert_player_template(
         player,

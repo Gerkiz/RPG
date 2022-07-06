@@ -1,25 +1,57 @@
 local Event = require 'utils.event_core'
-local Token = require 'utils.token'
+local Global = {
+    names = {},
+    index = 0,
+    filepath = {}
+}
 
-local Global = {}
+global.tokens = {}
 
-local names = {}
-Global.names = names
+local concat = table.concat
+
+--- Sets a new global
+---@param tbl any
+---@return integer
+---@return string
+function Global.set_global(tbl)
+    local filepath = debug.getinfo(3, 'S').short_src:gsub('^/[^/]+', ''):match('/(.+)$'):sub(1, -5):gsub('/', '_')
+
+    Global.index = Global.index + 1
+    Global.filepath[filepath] = Global.index
+    Global.names[filepath] = concat {Global.filepath[filepath], ' - ', filepath}
+
+    global.tokens[filepath] = tbl
+
+    return Global.index, filepath
+end
+
+--- Gets a global from global
+---@param token number|string
+---@return any|nil
+function Global.get_global(token)
+    if global.tokens[token] then
+        return global.tokens[token]
+    end
+end
 
 function Global.register(tbl, callback)
-    local token = Token.register_global(tbl)
+    local token, filepath = Global.set_global(tbl)
 
     Event.on_load(
         function()
-            callback(Token.get_global(token))
+            if global.tokens[token] then
+                callback(Global.get_global(token))
+            else
+                callback(Global.get_global(filepath))
+            end
         end
     )
 
-    return token
+    return filepath
 end
 
 function Global.register_init(tbl, init_handler, callback)
-    local token = Token.register_global(tbl)
+    local token, filepath = Global.set_global(tbl)
 
     Event.on_init(
         function()
@@ -30,11 +62,14 @@ function Global.register_init(tbl, init_handler, callback)
 
     Event.on_load(
         function()
-            callback(Token.get_global(token))
+            if global.tokens[token] then
+                callback(Global.get_global(token))
+            else
+                callback(Global.get_global(filepath))
+            end
         end
     )
-
-    return token
+    return filepath
 end
 
 return Global

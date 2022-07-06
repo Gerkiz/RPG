@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.13
+Date: 2022-07-06
+  Change:
+    - Added support for mod-gui for the top button. Changeable via the games mod settings.
+    - Added support for multiple surface. This means that the mod supports SE and other multi-surface mods.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.12
 Date: 2022-06-30
   Change:

@@ -34,14 +34,22 @@ function is_loaded(module)
 end
 
 function is_game_modded()
+    if global.is_modded ~= nil then
+        return global.is_modded
+    end
+
     local i = 0
-    for k, _ in pairs(game.active_mods) do
+    local is_modded = false
+    for _, _ in pairs(game.active_mods) do
         i = i + 1
         if i > 1 then
-            return true
+            is_modded = true
         end
     end
-    return false
+    if is_modded and not global.is_modded then
+        global.is_modded = true
+    end
+    return is_modded
 end
 
 function is_mod_loaded(module)
