@@ -238,4 +238,15 @@ Event.on_configuration_changed(
     end
 )
 
+Event.on_nth_tick( -- added because some mods really likes to reset player modifiers.
+    15,
+    function()
+        local players = game.connected_players
+        for i = 1, #players do
+            local player = players[i]
+            Public.update_player_modifiers(player)
+        end
+    end
+)
+
 return Public
