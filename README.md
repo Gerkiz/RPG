@@ -10,7 +10,7 @@
 
 ##### These settings can be changed ONLY at startup.
 
-![MODSETTINGSRUNTIME](https://raw.githubusercontent.com/Gerkiz/RPG/master/mod_pic/mod_settings_1.png
+![MODSETTINGSRUNTIME](https://raw.githubusercontent.com/Gerkiz/RPG/master/mod_pic/mod_settings_1.png)
 
 ##### These settings can be changed at any time by an admin.
 
@@ -18,7 +18,7 @@
 
 ## Spells
 
-![SPELLS](https://raw.githubusercontent.com/Gerkiz/RPG/master/mod_pic/spells.png
+![SPELLS](https://raw.githubusercontent.com/Gerkiz/RPG/master/mod_pic/spells.png)
 
 ## Remote Interface
 
