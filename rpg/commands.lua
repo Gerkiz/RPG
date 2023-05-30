@@ -227,6 +227,20 @@ if _DEBUG then
 end
 
 local RPG_Interface = {
+    add_new_projectile = function(name, projectile)
+        if name and projectile and type(projectile) == 'table' then
+            Public.set_new_projectile(projectile)
+        else
+            error('Remote call parameter to RPG add_new_projectile must be of type (name as string, data as {table}).')
+        end
+    end,
+    add_new_spell = function(spell)
+        if spell and type(spell) == 'table' then
+            Public.set_new_spell(spell)
+        else
+            error('Remote call parameter to RPG add_new_spell must be of type table.')
+        end
+    end,
     rpg_reset_player = function(player_name)
         if player_name then
             local player = game.get_player(player_name)

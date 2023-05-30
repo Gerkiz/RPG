@@ -10,8 +10,9 @@ Event.on_init(
         RPG.rpg_reset_all_players()
     end
 )
-
-RPG.disable_cooldowns_on_spells()
+if settings.startup.comfy_disable_cooldown.value then
+    RPG.disable_cooldowns_on_spells()
+end
 
 Event.on_nth_tick(
     60,

@@ -528,7 +528,7 @@ local function get_player_active_tab(player)
     return panel.tabs[index].tab, panel.tabs[index].content
 end
 
-function Public.reload_active_tab(player, forced)
+function Public.reload_active_tab(player)
     local frame, main_tab = get_player_active_tab(player)
     if not frame then
         return

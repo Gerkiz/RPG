@@ -43,5 +43,19 @@ data:extend {
         minimum_value = 0,
         maximum_value = 1,
         allowed_values = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1}
+    },
+    {
+        type = 'double-setting',
+        name = 'comfy_level_limit',
+        setting_type = 'startup',
+        default_value = 4999,
+        minimum_value = 100,
+        maximum_value = 10000
+    },
+    {
+        type = 'bool-setting',
+        name = 'comfy_disable_cooldown',
+        setting_type = 'startup',
+        default_value = true
     }
 }

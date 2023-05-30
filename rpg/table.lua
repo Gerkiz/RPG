@@ -38,7 +38,13 @@ local Public = {}
 Public.points_per_level = 5
 
 Public.experience_levels = {0}
-for a = 1, 4999, 1 do -- max level
+local level_limit = 4999
+
+if settings.startup.comfy_level_limit.value then
+    level_limit = settings.startup.comfy_level_limit.value
+end
+
+for a = 1, level_limit, 1 do -- max level
     Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] + a * 8
 end
 
@@ -162,8 +168,8 @@ function Public.get(key)
 end
 
 --- Gets value from player rpg_t table
----@param key string|nil
----@param value string|number|nil
+---@param key string|integer
+---@param value string|nil
 function Public.get_value_from_player(key, value)
     if key and value then
         if (this.rpg_t[key] and this.rpg_t[key][value]) then
@@ -182,8 +188,8 @@ end
 
 --- Sets value to player rpg_t table
 ---@param key string
----@param value string
----@param setter string
+---@param value string|boolean|number|nil
+---@param setter string|boolean|number|nil
 function Public.set_value_to_player(key, value, setter)
     if key and value then
         if (this.rpg_t[key] and this.rpg_t[key][value]) then
@@ -196,7 +202,7 @@ end
 
 --- Sets a new table to rpg_t table
 ---@param key string
----@param tbl string
+---@param tbl table
 function Public.set_new_player_tbl(key, tbl)
     if key and tbl then
         if type(tbl) ~= 'table' then
@@ -440,7 +446,7 @@ function Public.migrate_new_rpg_tbl(player)
     if rpg_t then
         rpg_t.flame_boots = nil
         rpg_t.one_punch = nil
-        rpg_t.points_left = rpg_t.points_to_distribute or 0
+        rpg_t.points_left = rpg_t.points_to_distribute or rpg_t.points_left or 0
         rpg_t.points_to_distribute = nil
 
         rpg_t.aoe_punch = false
@@ -461,13 +467,12 @@ function Public.migrate_new_rpg_tbl(player)
 end
 
 function Public.migrate_to_new_version()
-    Public.reset_table(true)
+    -- Public.reset_table(true)
     if this.rpg_spells then
         this.rpg_spells = nil
     end
 
     local players = game.players
-
     for _, player in pairs(players) do
         Public.migrate_new_rpg_tbl(player)
     end

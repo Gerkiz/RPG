@@ -78,7 +78,7 @@ local function on_gui_click(event)
         elseif event.button == defines.mouse_button_type.right then
             local left = rpg_t.points_left / 2
             if left > 2 then
-                for _ = 1, left, 1 do
+                for _ = 2, left, 1 do -- for _ = 1 results in uneven distribution
                     if rpg_t.points_left <= 0 then
                         Public.toggle(player, true)
                         return
@@ -378,7 +378,6 @@ local function on_entity_damaged(event)
     local entity = event.entity
     local cause = event.cause
     local original_damage_amount = event.original_damage_amount
-    local final_damage_amount = event.final_damage_amount
 
     if cause.get_inventory(defines.inventory.character_ammo)[cause.selected_gun_index].valid_for_read or cause.get_inventory(defines.inventory.character_guns)[cause.selected_gun_index].valid_for_read then
         local is_explosive_bullets_enabled = Public.get_explosive_bullets()
@@ -455,8 +454,6 @@ local function on_entity_damaged(event)
         )
     end
 
-    local get_health_pool = Public.has_health_boost(entity, damage, final_damage_amount, cause)
-
     --Cause a one punch.
     if enable_aoe_punch then
         if rpg_t.aoe_punch then
@@ -473,7 +470,7 @@ local function on_entity_damaged(event)
                 end
             )
             if success then
-                Public.aoe_punch(cause, entity, damage, get_health_pool) -- only kill the biters if their health is below or equal to zero
+                Public.aoe_punch(cause, entity, damage) -- only kill the biters if their health is below or equal to zero
                 return
             end
         end
@@ -787,7 +784,6 @@ local function on_player_used_capsule(event)
         return
     end
 
-    local conjure_items = Public.all_spells
     local projectile_types = Public.get_projectiles
 
     local player = game.get_player(event.player_index)
@@ -830,7 +826,7 @@ local function on_player_used_capsule(event)
     local mana = rpg_t.mana
     local surface = player.surface
 
-    local spell = conjure_items[rpg_t.dropdown_select_index]
+    local spell = Public.get_spell_by_name(rpg_t, rpg_t.dropdown_select_name)
     if not spell then
         return
     end
@@ -846,12 +842,12 @@ local function on_player_used_capsule(event)
         right_bottom = {x = position.x + radius, y = position.y + radius}
     }
 
-    if rpg_t.level < spell.level then
+    if not spell.enabled then
         return Public.cast_spell(player, true)
     end
 
-    if not spell.enabled then
-        return
+    if rpg_t.level < spell.level then
+        return Public.cast_spell(player, true)
     end
 
     if not Math2D.bounding_box.contains_point(area, player.position) then
@@ -905,9 +901,19 @@ local function on_player_used_capsule(event)
         rpg_t = rpg_t
     }
 
-    local cast_spell = spell.callback(data)
+    local funcs = {
+        remove_mana = Public.remove_mana,
+        damage_player_over_time = Public.damage_player_over_time,
+        cast_spell = Public.cast_spell
+    }
+
+    local cast_spell = spell.callback(data, funcs)
     if not cast_spell then
         return
+    end
+
+    if spell.enforce_cooldown then
+        Public.register_cooldown_for_player(player, spell)
     end
 
     rpg_t.last_spawned = game.tick + spell.cooldown

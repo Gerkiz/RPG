@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.15
+Date: 2023-05-30
+  Change:
+    - Added more remote interfaces and updated the module.
+    - Added more details on how to add new spells.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.14
 Date: 2022-07-18
   Change:
