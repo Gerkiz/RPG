@@ -41,8 +41,8 @@ data:extend {
         setting_type = 'runtime-global',
         default_value = 0.3,
         minimum_value = 0,
-        maximum_value = 1,
-        allowed_values = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1}
+        maximum_value = 0.9,
+        allowed_values = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 }
     },
     {
         type = 'double-setting',

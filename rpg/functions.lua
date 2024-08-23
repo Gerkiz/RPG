@@ -7,7 +7,7 @@ local Token = require 'utils.token'
 local Alert = require 'utils.alert'
 local Math2D = require 'math2d'
 
-local level_up_floating_text_color = {0, 205, 0}
+local level_up_floating_text_color = { 0, 205, 0 }
 local visuals_delay = Public.visuals_delay
 local xp_floating_text_color = Public.xp_floating_text_color
 local experience_levels = Public.experience_levels
@@ -44,31 +44,31 @@ local travelings = {
 
 local desync =
     Token.register(
-    function(data)
-        local entity = data.entity
-        if not entity or not entity.valid then
-            return
+        function(data)
+            local entity = data.entity
+            if not entity or not entity.valid then
+                return
+            end
+            local surface = data.surface
+            local fake_shooter = surface.create_entity({ name = 'character', position = entity.position, force = 'enemy' })
+            for _ = 1, 3 do
+                surface.create_entity(
+                    {
+                        name = 'explosive-rocket',
+                        position = entity.position,
+                        force = 'enemy',
+                        speed = 1,
+                        max_range = 1,
+                        target = entity,
+                        source = fake_shooter
+                    }
+                )
+            end
+            if fake_shooter and fake_shooter.valid then
+                fake_shooter.destroy()
+            end
         end
-        local surface = data.surface
-        local fake_shooter = surface.create_entity({name = 'character', position = entity.position, force = 'enemy'})
-        for _ = 1, 3 do
-            surface.create_entity(
-                {
-                    name = 'explosive-rocket',
-                    position = entity.position,
-                    force = 'enemy',
-                    speed = 1,
-                    max_range = 1,
-                    target = entity,
-                    source = fake_shooter
-                }
-            )
-        end
-        if fake_shooter and fake_shooter.valid then
-            fake_shooter.destroy()
-        end
-    end
-)
+    )
 
 local function create_healthbar(player, size)
     return rendering.draw_sprite(
@@ -79,7 +79,7 @@ local function create_healthbar(player, size)
             y_scale = size - 0.2,
             render_layer = 'light-effect',
             target = player.character,
-            target_offset = {0, -2.5},
+            target_offset = { 0, -2.5 },
             surface = player.surface
         }
     )
@@ -94,7 +94,7 @@ local function create_manabar(player, size)
             y_scale = size - 0.2,
             render_layer = 'light-effect',
             target = player.character,
-            target_offset = {0, -2.0},
+            target_offset = { 0, -2.0 },
             surface = player.surface
         }
     )
@@ -108,7 +108,7 @@ local function set_bar(min, max, id, mana)
     local x_scale = rendering.get_y_scale(id) * 8
     rendering.set_x_scale(id, x_scale * m)
     if not mana then
-        rendering.set_color(id, {math.floor(255 - 255 * m), math.floor(200 * m), 0})
+        rendering.set_color(id, { math.floor(255 - 255 * m), math.floor(200 * m), 0 })
     end
 end
 
@@ -184,31 +184,31 @@ end
 
 local repair_buildings =
     Token.register(
-    function(data)
-        local entity = data.entity
-        if entity and entity.valid then
-            local rng = 0.1
-            if math.random(1, 5) == 1 then
-                rng = 0.2
-            elseif math.random(1, 8) == 1 then
-                rng = 0.4
-            end
-            local to_heal = entity.prototype.max_health * rng
-            if entity.health and to_heal then
-                entity.health = entity.health + to_heal
+        function(data)
+            local entity = data.entity
+            if entity and entity.valid then
+                local rng = 0.1
+                if math.random(1, 5) == 1 then
+                    rng = 0.2
+                elseif math.random(1, 8) == 1 then
+                    rng = 0.4
+                end
+                local to_heal = entity.prototype.max_health * rng
+                if entity.health and to_heal then
+                    entity.health = entity.health + to_heal
+                end
             end
         end
-    end
-)
+    )
 
 function Public.repair_aoe(player, position)
-    local entities = player.surface.find_entities_filtered {force = player.force, area = {{position.x - 8, position.y - 8}, {position.x + 8, position.y + 8}}}
+    local entities = player.surface.find_entities_filtered { force = player.force, area = { { position.x - 8, position.y - 8 }, { position.x + 8, position.y + 8 } } }
     local count = 0
     for i = 1, #entities do
         local e = entities[i]
         if e.prototype.max_health ~= e.health then
             count = count + 1
-            Task.set_timeout_in_ticks(10, repair_buildings, {entity = e})
+            Task.set_timeout_in_ticks(10, repair_buildings, { entity = e })
         end
     end
     return count
@@ -216,17 +216,17 @@ end
 
 function Public.suicidal_comfylatron(pos, surface)
     local str = travelings[math.random(1, #travelings)]
-    local symbols = {'', '!', '!', '!!', '..'}
+    local symbols = { '', '!', '!', '!!', '..' }
     str = str .. symbols[math.random(1, #symbols)]
     local text = str
     local e =
         surface.create_entity(
-        {
-            name = 'compilatron',
-            position = {x = pos.x, y = pos.y + 2},
-            force = 'neutral'
-        }
-    )
+            {
+                name = 'compilatron',
+                position = { x = pos.x, y = pos.y + 2 },
+                force = 'neutral'
+            }
+        )
     surface.create_entity(
         {
             name = 'compi-speech-bubble',
@@ -235,7 +235,7 @@ function Public.suicidal_comfylatron(pos, surface)
             text = text
         }
     )
-    local nearest_player_unit = surface.find_nearest_enemy({position = e.position, max_distance = 512, force = 'player'})
+    local nearest_player_unit = surface.find_nearest_enemy({ position = e.position, max_distance = 512, force = 'player' })
 
     if nearest_player_unit and nearest_player_unit.active and nearest_player_unit.force.name ~= 'player' then
         e.set_command(
@@ -251,13 +251,13 @@ function Public.suicidal_comfylatron(pos, surface)
         }
         Task.set_timeout_in_ticks(600, desync, data)
     else
-        e.surface.create_entity({name = 'medium-explosion', position = e.position})
+        e.surface.create_entity({ name = 'medium-explosion', position = e.position })
         e.surface.create_entity(
             {
                 name = 'flying-text',
                 position = e.position,
                 text = 'DeSyyNC - no target found!',
-                color = {r = 150, g = 0, b = 0}
+                color = { r = 150, g = 0, b = 0 }
             }
         )
         e.die()
@@ -320,8 +320,8 @@ function Public.get_last_spell_cast(player)
     local position = player.position
     local cast_radius = 1
     local cast_area = {
-        left_top = {x = rpg_t.last_spell_cast.x - cast_radius, y = rpg_t.last_spell_cast.y - cast_radius},
-        right_bottom = {x = rpg_t.last_spell_cast.x + cast_radius, y = rpg_t.last_spell_cast.y + cast_radius}
+        left_top = { x = rpg_t.last_spell_cast.x - cast_radius, y = rpg_t.last_spell_cast.y - cast_radius },
+        right_bottom = { x = rpg_t.last_spell_cast.x + cast_radius, y = rpg_t.last_spell_cast.y + cast_radius }
     }
 
     if rpg_t.last_spell_cast then
@@ -523,7 +523,8 @@ function Public.update_health(player)
 
     if rpg_extra.enable_health_and_mana_bars then
         if rpg_t.show_bars then
-            local max_life = math.floor(player.character.prototype.max_health + player.character_health_bonus + player.force.character_health_bonus)
+            local max_life = math.floor(player.character.prototype.max_health + player.character_health_bonus +
+            player.force.character_health_bonus)
             if not rpg_t.health_bar then
                 rpg_t.health_bar = create_healthbar(player, 0.5)
             elseif not rendering.is_valid(rpg_t.health_bar) then
@@ -554,13 +555,13 @@ function Public.aoe_punch(character, target, damage)
         return
     end
 
-    local base_vector = {target.position.x - character.position.x, target.position.y - character.position.y}
+    local base_vector = { target.position.x - character.position.x, target.position.y - character.position.y }
 
-    local vector = {base_vector[1], base_vector[2]}
+    local vector = { base_vector[1], base_vector[2] }
     vector[1] = vector[1] * 1000
     vector[2] = vector[2] * 1000
 
-    character.surface.create_entity({name = 'blood-explosion-huge', position = target.position})
+    character.surface.create_entity({ name = 'blood-explosion-huge', position = target.position })
 
     if abs(vector[1]) > abs(vector[2]) then
         local d = abs(vector[1])
@@ -591,9 +592,9 @@ function Public.aoe_punch(character, target, damage)
     for i = 1, 16, 1 do
         for x = i * -1 * a, i * a, 1 do
             for y = i * -1 * a, i * a, 1 do
-                local p = {cp.x + x + vector[1] * i, cp.y + y + vector[2] * i}
-                cs.create_trivial_smoke({name = 'train-smoke', position = p})
-                for _, e in pairs(cs.find_entities({{p[1] - a, p[2] - a}, {p[1] + a, p[2] + a}})) do
+                local p = { cp.x + x + vector[1] * i, cp.y + y + vector[2] * i }
+                cs.create_trivial_smoke({ name = 'train-smoke', position = p })
+                for _, e in pairs(cs.find_entities({ { p[1] - a, p[2] - a }, { p[1] + a, p[2] + a } })) do
                     if e.valid then
                         if e.health then
                             if e.destructible and e.minable and e.force.index ~= 3 then
@@ -655,7 +656,8 @@ function Public.update_player_stats(player)
     local strength = rpg_t.strength - 10
     P.update_single_modifier(player, 'character_inventory_slots_bonus', 'rpg', round(strength * 0.2, 3))
     P.update_single_modifier(player, 'character_mining_speed_modifier', 'rpg', round(strength * 0.006, 3))
-    P.update_single_modifier(player, 'character_maximum_following_robot_count_bonus', 'rpg', round(strength / 2 * 0.03, 3))
+    P.update_single_modifier(player, 'character_maximum_following_robot_count_bonus', 'rpg',
+        round(strength / 2 * 0.03, 3))
 
     local magic = rpg_t.magicka - 10
     local v = magic * 0.22
@@ -679,21 +681,22 @@ function Public.update_player_stats(player)
 end
 
 function Public.level_up_effects(player)
-    local position = {x = player.position.x - 0.75, y = player.position.y - 1}
-    player.surface.create_entity({name = 'flying-text', position = position, text = '+LVL ', color = level_up_floating_text_color})
+    local position = { x = player.position.x - 0.75, y = player.position.y - 1 }
+    player.surface.create_entity({ name = 'flying-text', position = position, text = '+LVL ', color =
+    level_up_floating_text_color })
     local b = 0.75
     for _ = 1, 5, 1 do
         local p = {
             (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
             position.y + (b * -1 + math.random(0, b * 20) * 0.1)
         }
-        player.surface.create_entity({name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}})
+        player.surface.create_entity({ name = 'flying-text', position = p, text = '✚', color = { 255, math.random(0, 100), 0 } })
     end
-    player.play_sound {path = 'utility/achievement_unlocked', volume_modifier = 0.50}
+    player.play_sound { path = 'utility/achievement_unlocked', volume_modifier = 0.50 }
 end
 
 function Public.cast_spell(player, failed)
-    local position = {x = player.position.x - 0.75, y = player.position.y - 1}
+    local position = { x = player.position.x - 0.75, y = player.position.y - 1 }
     local b = 0.75
     if not failed then
         for _ = 1, 3, 1 do
@@ -701,33 +704,34 @@ function Public.cast_spell(player, failed)
                 (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
                 position.y + (b * -1 + math.random(0, b * 20) * 0.1)
             }
-            player.surface.create_entity({name = 'flying-text', position = p, text = '✔️', color = {255, math.random(0, 100), 0}})
+            player.surface.create_entity({ name = 'flying-text', position = p, text = '✔️', color = { 255, math.random(0, 100), 0 } })
         end
-        player.play_sound {path = 'utility/scenario_message', volume_modifier = 1}
+        player.play_sound { path = 'utility/scenario_message', volume_modifier = 1 }
     else
         for _ = 1, 3, 1 do
             local p = {
                 (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
                 position.y + (b * -1 + math.random(0, b * 20) * 0.1)
             }
-            player.surface.create_entity({name = 'flying-text', position = p, text = '✖', color = {255, math.random(0, 100), 0}})
+            player.surface.create_entity({ name = 'flying-text', position = p, text = '✖', color = { 255, math.random(0, 100), 0 } })
         end
-        player.play_sound {path = 'utility/cannot_build', volume_modifier = 1}
+        player.play_sound { path = 'utility/cannot_build', volume_modifier = 1 }
     end
 end
 
 function Public.xp_effects(player)
-    local position = {x = player.position.x - 0.75, y = player.position.y - 1}
-    player.surface.create_entity({name = 'flying-text', position = position, text = '+XP', color = level_up_floating_text_color})
+    local position = { x = player.position.x - 0.75, y = player.position.y - 1 }
+    player.surface.create_entity({ name = 'flying-text', position = position, text = '+XP', color =
+    level_up_floating_text_color })
     local b = 0.75
     for _ = 1, 5, 1 do
         local p = {
             (position.x + 0.4) + (b * -1 + math.random(0, b * 20) * 0.1),
             position.y + (b * -1 + math.random(0, b * 20) * 0.1)
         }
-        player.surface.create_entity({name = 'flying-text', position = p, text = '✚', color = {255, math.random(0, 100), 0}})
+        player.surface.create_entity({ name = 'flying-text', position = p, text = '✚', color = { 255, math.random(0, 100), 0 } })
     end
-    player.play_sound {path = 'utility/achievement_unlocked', volume_modifier = 0.50}
+    player.play_sound { path = 'utility/achievement_unlocked', volume_modifier = 0.50 }
 end
 
 function Public.get_range_modifier(player)
@@ -822,16 +826,16 @@ function Public.get_heal_modifier_from_using_fish(player)
         local health = player.character_health_bonus + 250
         local color
         if char.health > (health * 0.50) then
-            color = {b = 0.2, r = 0.1, g = 1, a = 0.8}
+            color = { b = 0.2, r = 0.1, g = 1, a = 0.8 }
         elseif char.health > (health * 0.25) then
-            color = {r = 1, g = 1, b = 0}
+            color = { r = 1, g = 1, b = 0 }
         else
-            color = {b = 0.1, r = 1, g = 0, a = 0.8}
+            color = { b = 0.1, r = 1, g = 0, a = 0.8 }
         end
         player.surface.create_entity(
             {
                 name = 'flying-text',
-                position = {position.x, position.y + 0.6},
+                position = { position.x, position.y + 0.6 },
                 text = '+' .. rng,
                 color = color
             }
@@ -883,46 +887,47 @@ end
 local show_cooldown
 show_cooldown =
     Token.register(
-    function(event)
-        local player_index = event.player_index
-        local player = game.get_player(player_index)
-        if not player or not player.valid then
-            return
+        function(event)
+            local player_index = event.player_index
+            local player = game.get_player(player_index)
+            if not player or not player.valid then
+                return
+            end
+
+            local tick = event.tick
+            local now = game.tick
+            if now >= tick then
+                return
+            end
+
+            local fade = ((now - tick) / event.delay) + 1
+
+            if not player.character then
+                return
+            end
+
+            draw_arc(
+                {
+                    color = { 1 - fade, fade, 0 },
+                    max_radius = 0.5,
+                    min_radius = 0.4,
+                    start_angle = start_angle,
+                    angle = fade * angle_multipler,
+                    target = player.character,
+                    target_offset = { x = 0, y = -2 },
+                    surface = player.surface,
+                    time_to_live = time_to_live
+                }
+            )
+
+            Task.set_timeout_in_ticks(update_rate, show_cooldown, event)
         end
-
-        local tick = event.tick
-        local now = game.tick
-        if now >= tick then
-            return
-        end
-
-        local fade = ((now - tick) / event.delay) + 1
-
-        if not player.character then
-            return
-        end
-
-        draw_arc(
-            {
-                color = {1 - fade, fade, 0},
-                max_radius = 0.5,
-                min_radius = 0.4,
-                start_angle = start_angle,
-                angle = fade * angle_multipler,
-                target = player.character,
-                target_offset = {x = 0, y = -2},
-                surface = player.surface,
-                time_to_live = time_to_live
-            }
-        )
-
-        Task.set_timeout_in_ticks(update_rate, show_cooldown, event)
-    end
-)
+    )
 Public.show_cooldown = show_cooldown
 
 function Public.register_cooldown_for_player(player, spell)
-    Task.set_timeout_in_ticks(update_rate, show_cooldown, {player_index = player.index, tick = game.tick + spell.cooldown, delay = spell.cooldown})
+    Task.set_timeout_in_ticks(update_rate, show_cooldown,
+        { player_index = player.index, tick = game.tick + spell.cooldown, delay = spell.cooldown })
 end
 
 --- Gives connected player some bonus xp if the map was preemptively shut down.
@@ -988,48 +993,48 @@ function Public.rpg_reset_player(player, one_time_reset)
         local old_xp = rpg_t.xp
         rpg_t =
             Public.set_new_player_tbl(
-            player.index,
-            {
-                level = 1,
-                xp = 0,
-                strength = 10,
-                magicka = 10,
-                dexterity = 10,
-                vitality = 10,
-                mana = 0,
-                mana_max = 0,
-                last_spawned = 0,
-                dropdown_select_index = 1,
-                dropdown_select_name = Public.all_spells[1].name[1],
-                dropdown_select_index_1 = 1,
-                dropdown_select_name_1 = Public.all_spells[1].name[1],
-                dropdown_select_index_2 = 1,
-                dropdown_select_name_2 = Public.all_spells[1].name[1],
-                dropdown_select_index_3 = 1,
-                dropdown_select_name_3 = Public.all_spells[1].name[1],
-                allocate_index = 1,
-                explosive_bullets = false,
-                enable_entity_spawn = false,
-                health_bar = rpg_t.health_bar,
-                mana_bar = rpg_t.mana_bar,
-                points_left = 0,
-                last_floaty_text = visuals_delay,
-                xp_since_last_floaty_text = 0,
-                reset = true,
-                capped = false,
-                bonus = rpg_extra.breached_walls or 1,
-                rotated_entity_delay = 0,
-                last_mined_entity_position = {x = 0, y = 0},
-                last_spell_cast = {x = 0, y = 0},
-                show_bars = false,
-                stone_path = false,
-                aoe_punch = false,
-                auto_toggle_features = {
+                player.index,
+                {
+                    level = 1,
+                    xp = 0,
+                    strength = 10,
+                    magicka = 10,
+                    dexterity = 10,
+                    vitality = 10,
+                    mana = 0,
+                    mana_max = 0,
+                    last_spawned = 0,
+                    dropdown_select_index = 1,
+                    dropdown_select_name = Public.all_spells[1].name[1],
+                    dropdown_select_index_1 = 1,
+                    dropdown_select_name_1 = Public.all_spells[1].name[1],
+                    dropdown_select_index_2 = 1,
+                    dropdown_select_name_2 = Public.all_spells[1].name[1],
+                    dropdown_select_index_3 = 1,
+                    dropdown_select_name_3 = Public.all_spells[1].name[1],
+                    allocate_index = 1,
+                    explosive_bullets = false,
+                    enable_entity_spawn = false,
+                    health_bar = rpg_t.health_bar,
+                    mana_bar = rpg_t.mana_bar,
+                    points_left = 0,
+                    last_floaty_text = visuals_delay,
+                    xp_since_last_floaty_text = 0,
+                    reset = true,
+                    capped = false,
+                    bonus = rpg_extra.breached_walls or 1,
+                    rotated_entity_delay = 0,
+                    last_mined_entity_position = { x = 0, y = 0 },
+                    last_spell_cast = { x = 0, y = 0 },
+                    show_bars = false,
                     stone_path = false,
-                    aoe_punch = false
+                    aoe_punch = false,
+                    auto_toggle_features = {
+                        stone_path = false,
+                        aoe_punch = false
+                    }
                 }
-            }
-        )
+            )
         rpg_t.points_left = old_points_left + total
         rpg_t.xp = round(old_xp)
         rpg_t.level = old_level
@@ -1065,8 +1070,8 @@ function Public.rpg_reset_player(player, one_time_reset)
                 total = 0,
                 bonus = 1,
                 rotated_entity_delay = 0,
-                last_mined_entity_position = {x = 0, y = 0},
-                last_spell_cast = {x = 0, y = 0},
+                last_mined_entity_position = { x = 0, y = 0 },
+                last_spell_cast = { x = 0, y = 0 },
                 show_bars = false,
                 stone_path = false,
                 aoe_punch = false,
@@ -1109,7 +1114,7 @@ function Public.gain_xp(player, amount, added_to_pool, text)
         add_to_global_pool(amount, false)
         if not rpg_t.capped then
             rpg_t.capped = true
-            local message = ({'rpg_functions.max_level'})
+            local message = ({ 'rpg_functions.max_level' })
             Alert.alert_player_warning(player, 10, message)
         end
         return
@@ -1202,21 +1207,13 @@ function Public.global_pool(players, count)
 
     for i = 1, #players do
         local p = players[i]
-        if p.afk_time < 5000 then
-            if not Public.level_limit_exceeded(p) then
-                Public.gain_xp(p, share, false, true)
-                Public.xp_effects(p)
-            else
-                share = share / 10
-                rpg_extra.leftover_pool = rpg_extra.leftover_pool + share
-                Public.debug_log('RPG - player capped: ' .. p.name .. '. Amount to pool:' .. share)
-            end
+        if not Public.level_limit_exceeded(p) then
+            Public.gain_xp(p, share, false, true)
+            Public.xp_effects(p)
         else
-            local message = ({'rpg_functions.pool_reward', p.name})
-            Alert.alert_player_warning(p, 10, message)
             share = share / 10
             rpg_extra.leftover_pool = rpg_extra.leftover_pool + share
-            Public.debug_log('RPG - player AFK: ' .. p.name .. '. Amount to pool:' .. share)
+            Public.debug_log('RPG - player capped: ' .. p.name .. '. Amount to pool:' .. share)
         end
     end
 
@@ -1225,15 +1222,15 @@ end
 
 local damage_player_over_time_token =
     Token.register(
-    function(data)
-        local player = data.player
-        if not player.character or not player.character.valid then
-            return
+        function(data)
+            local player = data.player
+            if not player.character or not player.character.valid then
+                return
+            end
+            player.character.health = player.character.health - (player.character.health * 0.05)
+            player.character.surface.create_entity({ name = 'water-splash', position = player.position })
         end
-        player.character.health = player.character.health - (player.character.health * 0.05)
-        player.character.surface.create_entity({name = 'water-splash', position = player.position})
-    end
-)
+    )
 
 --- Damages a player over time.
 function Public.damage_player_over_time(player, amount)
@@ -1244,7 +1241,7 @@ function Public.damage_player_over_time(player, amount)
     amount = amount or 10
     local tick = 20
     for _ = 1, amount, 1 do
-        Task.set_timeout_in_ticks(tick, damage_player_over_time_token, {player = player})
+        Task.set_timeout_in_ticks(tick, damage_player_over_time_token, { player = player })
         tick = tick + 15
     end
 end
