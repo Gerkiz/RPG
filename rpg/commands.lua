@@ -119,112 +119,13 @@ commands.add_command(
 
         if validate_args(data) then
             local msg = print_stats(target)
-            player.play_sound {path = 'utility/scenario_message', volume_modifier = 1}
+            player.play_sound { path = 'utility/scenario_message', volume_modifier = 1 }
             player.print(msg)
         else
             player.print('[Stats] Please type a name of a player who is connected.', Color.warning)
         end
     end
 )
-
-if _DEBUG then
-    commands.add_command(
-        'give_xp',
-        'DEBUG ONLY - if you are seeing this then this map is running on debug-mode.',
-        function(cmd)
-            local p
-            local player = game.player
-            local param = tonumber(cmd.parameter)
-
-            if player then
-                if player ~= nil then
-                    p = player.print
-                    if not player.admin then
-                        p("[ERROR] You're not admin!", Color.fail)
-                        return
-                    end
-                    if not param then
-                        return
-                    end
-                    p('Distributed ' .. param .. ' of xp.')
-                    Public.give_xp(param)
-                end
-            end
-        end
-    )
-    commands.add_command(
-        'rpg_debug_module',
-        '',
-        function()
-            local player = game.player
-
-            if not (player and player.valid) then
-                return
-            end
-
-            if not player.admin then
-                return
-            end
-
-            Public.toggle_debug()
-        end
-    )
-
-    commands.add_command(
-        'rpg_debug_aoe_punch',
-        '',
-        function()
-            local player = game.player
-
-            if not (player and player.valid) then
-                return
-            end
-
-            if not player.admin then
-                return
-            end
-
-            Public.toggle_debug_aoe_punch()
-        end
-    )
-
-    commands.add_command(
-        'rpg_cheat_stats',
-        '',
-        function()
-            local player = game.player
-
-            if not (player and player.valid) then
-                return
-            end
-
-            if not player.admin then
-                return
-            end
-
-            local data = Public.get('rpg_t')
-            for k, _ in pairs(data) do
-                data[k].dexterity = 999
-                data[k].enable_entity_spawn = true
-                data[k].explosive_bullets = true
-                data[k].level = 1000
-                data[k].magicka = 999
-                data[k].mana = 50000
-                data[k].mana_max = 50000
-                data[k].debug_mode = true
-                data[k].aoe_punch = true
-                data[k].stone_path = true
-                data[k].strength = 3000
-                data[k].vitality = 3000
-                data[k].xp = 456456
-                local p = game.get_player(k)
-                if p and p.valid then
-                    Public.update_player_stats(p)
-                end
-            end
-        end
-    )
-end
 
 local RPG_Interface = {
     add_new_projectile = function(name, projectile)
@@ -266,20 +167,22 @@ local RPG_Interface = {
             if player and player.valid and type(amount) == 'number' then
                 return Public.gain_xp(player, amount)
             else
-                error('Remote call parameter to RPG give_xp must be a valid player name and contain amount(number) and not nil.')
+                error(
+                    'Remote call parameter to RPG give_xp must be a valid player name and contain amount(number) and not nil.')
             end
         else
-            error('Remote call parameter to RPG give_xp must be a valid player name and contain amount(number) and not nil.')
+            error(
+                'Remote call parameter to RPG give_xp must be a valid player name and contain amount(number) and not nil.')
         end
     end,
     get_global = function()
-        log(serpent.block(global.tokens))
+        log(serpent.block(storage.tokens))
     end,
     set_global = function(key, value)
         if key and value then
-            global.tokens[key] = value
+            storage.tokens[key] = value
         end
-        return global.tokens
+        return storage.tokens
     end
 }
 

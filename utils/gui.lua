@@ -24,20 +24,26 @@ local settings = {
 
 Public.token =
     Global.register(
-    {data = data, element_map = element_map, settings = settings},
-    function(tbl)
-        data = tbl.data
-        element_map = tbl.element_map
-        settings = tbl.settings
-    end
-)
+        { data = data, element_map = element_map, settings = settings },
+        function(tbl)
+            data = tbl.data
+            element_map = tbl.element_map
+            settings = tbl.settings
+        end
+    )
 
 Public.settings_white_icon = 'rpg_settings_white_icon'
 Public.settings_black_icon = 'rpg_settings_black_icon'
 Public.pin_white_icon = 'rpg_pin_white_icon'
 Public.pin_black_icon = 'rpg_pin_black_icon'
-Public.infinite_icon = 'rpg_infinite_icon'
+Public.infinite_icon = 'rpg_infinity_icon'
+Public.arrow_up_icon = 'rpg_arrow_up_icon'
 Public.arrow_down_icon = 'rpg_arrow_down_icon'
+Public.tidal_icon = 'rpg_tidal_icon'
+Public.spew_icon = 'rpg_spew_icon'
+Public.berserk_icon = 'rpg_berserk_icon'
+Public.warp_icon = 'rpg_warp_icon'
+Public.x_icon = 'rpg_x_icon'
 Public.info_icon = 'rpg_info_icon'
 
 function Public.uid_name()
@@ -76,6 +82,7 @@ function Public.set_data(element, value)
         values[element.index] = value
     end
 end
+
 local set_data = Public.set_data
 
 -- Gets the Associated data with this LuaGuiElement if any.
@@ -95,20 +102,21 @@ function Public.get_data(element)
 end
 
 -- Adds a gui that is alike the factorio native gui.
-function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_settings_button_name, close_main_frame_name, name, info)
+function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_settings_button_name,
+                                            close_main_frame_name, name, info)
     if not align then
         return
     end
     local main_frame
     if align == 'left' then
-        main_frame = player.gui.left.add {type = 'frame', name = set_frame_name, direction = 'vertical'}
+        main_frame = player.gui.left.add { type = 'frame', name = set_frame_name, direction = 'vertical' }
     elseif align == 'center' then
-        main_frame = player.gui.center.add {type = 'frame', name = set_frame_name, direction = 'vertical'}
+        main_frame = player.gui.center.add { type = 'frame', name = set_frame_name, direction = 'vertical' }
     elseif align == 'screen' then
-        main_frame = player.gui.screen.add {type = 'frame', name = set_frame_name, direction = 'vertical'}
+        main_frame = player.gui.screen.add { type = 'frame', name = set_frame_name, direction = 'vertical' }
     end
 
-    local titlebar = main_frame.add {type = 'flow', name = 'titlebar', direction = 'horizontal'}
+    local titlebar = main_frame.add { type = 'flow', name = 'titlebar', direction = 'horizontal' }
     titlebar.style.horizontal_spacing = 8
     titlebar.style = 'horizontal_flow'
 
@@ -123,7 +131,7 @@ function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_s
         caption = name,
         ignored_by_interaction = true
     }
-    local widget = titlebar.add {type = 'empty-widget', style = 'draggable_space', ignored_by_interaction = true}
+    local widget = titlebar.add { type = 'empty-widget', style = 'draggable_space', ignored_by_interaction = true }
     widget.style.left_margin = 4
     widget.style.right_margin = 4
     widget.style.height = 24
@@ -136,7 +144,7 @@ function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_s
                 name = set_settings_button_name,
                 style = 'frame_action_button',
                 sprite = Public.settings_white_icon,
-                mouse_button_filter = {'left'},
+                mouse_button_filter = { 'left' },
                 hovered_sprite = Public.settings_black_icon,
                 clicked_sprite = Public.settings_black_icon,
                 tooltip = 'Settings',
@@ -150,7 +158,7 @@ function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_s
                 name = set_settings_button_name,
                 style = 'frame_action_button',
                 sprite = Public.info_icon,
-                mouse_button_filter = {'left'},
+                mouse_button_filter = { 'left' },
                 hovered_sprite = Public.info_icon,
                 clicked_sprite = Public.info_icon,
                 tooltip = 'Info',
@@ -166,10 +174,8 @@ function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_s
             type = 'sprite-button',
             name = close_main_frame_name,
             style = 'frame_action_button',
-            mouse_button_filter = {'left'},
-            sprite = 'utility/close_white',
-            hovered_sprite = 'utility/close_black',
-            clicked_sprite = 'utility/close_black',
+            mouse_button_filter = { 'left' },
+            sprite = 'utility/close',
             tooltip = 'Close',
             tags = {
                 action = 'close_main_frame_gui'
@@ -179,9 +185,9 @@ function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_s
 
     local inside_frame =
         main_frame.add {
-        type = 'frame',
-        style = 'inside_shallow_frame'
-    }
+            type = 'frame',
+            style = 'inside_shallow_frame'
+        }
 
     local inside_frame_style = inside_frame.style
     inside_frame_style.vertically_stretchable = true
@@ -189,10 +195,10 @@ function Public.add_main_frame_with_toolbar(player, align, set_frame_name, set_s
 
     local inside_table =
         inside_frame.add {
-        type = 'table',
-        column_count = 1,
-        name = 'inside_frame'
-    }
+            type = 'table',
+            column_count = 1,
+            name = 'inside_frame'
+        }
     inside_table.style.padding = 3
 
     return main_frame, inside_table
@@ -215,6 +221,7 @@ function Public.remove_data_recursively(element)
         end
     end
 end
+
 remove_data_recursively = Public.remove_data_recursively
 
 local remove_children_data
@@ -232,6 +239,7 @@ function Public.remove_children_data(element)
         end
     end
 end
+
 remove_children_data = Public.remove_children_data
 
 function Public.destroy(element)
@@ -243,34 +251,6 @@ function Public.clear(element)
     remove_children_data(element)
     element.clear()
 end
-
-local function clear_invalid_data()
-    if settings.disable_clear_invalid_data then
-        return
-    end
-
-    for _, player in pairs(game.players) do
-        local player_index = player.index
-        local values = data[player_index]
-        if values then
-            for k, element in next, values do
-                if type(element) == 'table' then
-                    for key, obj in next, element do
-                        if type(obj) == 'table' and obj.valid ~= nil then
-                            if not obj.valid then
-                                element[key] = nil
-                            end
-                        end
-                    end
-                    if type(element) == 'userdata' and not element.valid then
-                        values[k] = nil
-                    end
-                end
-            end
-        end
-    end
-end
-Event.on_nth_tick(300, clear_invalid_data)
 
 local function handler_factory(event_id)
     local handlers
@@ -320,7 +300,7 @@ local function custom_raise(handlers, element, player)
         return
     end
 
-    handler({element = element, player = player})
+    handler({ element = element, player = player })
 end
 
 -- Disabled the handler so it does not clean then data table of invalid data.
@@ -392,7 +372,7 @@ function Public.get_parent_frame(player)
 end
 
 --- This adds the given gui to the top gui.
----@param player userdata
+---@param player LuaPlayer
 ---@param frame table
 function Public.add_mod_button(player, frame)
     if Public.get_button_flow(player)[frame.name] and Public.get_button_flow(player)[frame.name].valid then
@@ -436,7 +416,7 @@ function Public.add_tab_to_gui(tbl)
     local only_server_sided = tbl.only_server_sided or false
 
     if not main_gui_tabs[tbl.caption] then
-        main_gui_tabs[tbl.caption] = {id = tbl.id, name = tbl.name, admin = admin, only_server_sided = only_server_sided}
+        main_gui_tabs[tbl.caption] = { id = tbl.id, name = tbl.name, admin = admin, only_server_sided = only_server_sided }
     else
         error('Given name: ' .. tbl.caption .. ' already exists in table.')
     end
@@ -560,16 +540,17 @@ local function draw_main_frame(player)
         Public.get_main_frame(player).destroy()
     end
 
-    local frame, inside_frame = Public.add_main_frame_with_toolbar(player, 'left', main_frame_name, nil, close_button_name, 'Comfy Panel')
+    local frame, inside_frame = Public.add_main_frame_with_toolbar(player, 'left', main_frame_name, nil,
+        close_button_name, 'Comfy Panel')
 
-    local tabbed_pane = inside_frame.add({type = 'tabbed-pane', name = 'tabbed_pane'})
+    local tabbed_pane = inside_frame.add({ type = 'tabbed-pane', name = 'tabbed_pane' })
 
     for name, func in pairs(tabs) do
         if not settings.disabled_tabs[name] then
             if func.admin == true then
                 if player.admin then
-                    local tab = tabbed_pane.add({type = 'tab', caption = name, name = func.name})
-                    local name_frame = tabbed_pane.add({type = 'frame', name = name, direction = 'vertical'})
+                    local tab = tabbed_pane.add({ type = 'tab', caption = name, name = func.name })
+                    local name_frame = tabbed_pane.add({ type = 'frame', name = name, direction = 'vertical' })
                     name_frame.style.minimal_height = 480
                     name_frame.style.maximal_height = 480
                     name_frame.style.minimal_width = 800
@@ -577,8 +558,8 @@ local function draw_main_frame(player)
                     tabbed_pane.add_tab(tab, name_frame)
                 end
             else
-                local tab = tabbed_pane.add({type = 'tab', caption = name, name = func.name})
-                local name_frame = tabbed_pane.add({type = 'frame', name = name, direction = 'vertical'})
+                local tab = tabbed_pane.add({ type = 'tab', caption = name, name = func.name })
+                local name_frame = tabbed_pane.add({ type = 'frame', name = name, direction = 'vertical' })
                 name_frame.style.minimal_height = 480
                 name_frame.style.maximal_height = 480
                 name_frame.style.minimal_width = 800
@@ -594,7 +575,7 @@ local function draw_main_frame(player)
         child.style.right_padding = 2
     end
 
-    Public.reload_active_tab(player, true)
+    Public.reload_active_tab(player)
     return frame, inside_frame
 end
 
@@ -607,7 +588,7 @@ function Public.call_existing_tab(player, name)
     for key, v in pairs(tabbed_pane.tabs) do
         if v.tab.caption == name then
             tabbed_pane.selected_tab_index = key
-            Public.reload_active_tab(player, true)
+            Public.reload_active_tab(player)
         end
     end
 end
@@ -667,63 +648,6 @@ Public.on_player_show_top = custom_handler_factory(on_visible_handlers)
 -- Guarantees that the element and the player are valid when calling the handler.
 -- Adds a player field to the event table.
 Public.on_pre_player_hide_top = custom_handler_factory(on_pre_hidden_handlers)
-
-if _DEBUG then
-    local concat = table.concat
-
-    local names = {}
-    Public.names = names
-
-    function Public.uid_name()
-        local info = debug.getinfo(2, 'Sl')
-        local filepath = info.source:match('^.+/currently%-playing/(.+)$'):sub(1, -5)
-        local line = info.currentline
-
-        local token = tostring(Token.uid())
-
-        local name = concat {token, ' - ', filepath, ':line:', line}
-        names[token] = name
-
-        return token
-    end
-
-    function Public.set_data(element, value)
-        local player_index = element.player_index
-        local values = data[player_index]
-
-        if value == nil then
-            if not values then
-                return
-            end
-
-            local index = element.index
-            values[index] = nil
-            element_map[index] = nil
-
-            if next(values) == nil then
-                data[player_index] = nil
-            end
-        else
-            if not values then
-                values = {}
-                data[player_index] = values
-            end
-
-            local index = element.index
-            values[index] = value
-            element_map[index] = element
-        end
-    end
-    set_data = Public.set_data
-
-    function Public.data()
-        return data
-    end
-
-    function Public.element_map()
-        return element_map
-    end
-end
 
 Public.get_button_flow = mod_gui.get_button_flow
 Public.mod_button = mod_gui.get_button_flow

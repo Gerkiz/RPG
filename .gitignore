@@ -43,3 +43,5 @@ luac.out
 .vscode/settings.json
 
 .luacheckrc
+
+.vscode/

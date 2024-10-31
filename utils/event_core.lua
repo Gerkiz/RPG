@@ -33,15 +33,8 @@ local function handler_error(err)
 end
 
 local function call_handlers(handlers, event)
-    if _DEBUG then
-        for i = 1, #handlers do
-            local handler = handlers[i]
-            handler(event)
-        end
-    else
-        for i = 1, #handlers do
-            xpcall(handlers[i], handler_error, event)
-        end
+    for i = 1, #handlers do
+        xpcall(handlers[i], handler_error, event)
     end
 end
 
@@ -94,7 +87,7 @@ end
 function Public.add(event_name, handler, filters)
     local handlers = event_handlers[event_name]
     if not handlers then
-        event_handlers[event_name] = {handler}
+        event_handlers[event_name] = { handler }
         if filters then
             script_on_event(event_name, on_event, filters)
         else
@@ -116,7 +109,7 @@ end
 function Public.on_init(handler)
     local handlers = event_handlers[init_event_name]
     if not handlers then
-        event_handlers[init_event_name] = {handler}
+        event_handlers[init_event_name] = { handler }
         script.on_init(on_init)
     else
         table.insert(handlers, handler)
@@ -130,7 +123,7 @@ end
 function Public.on_configuration_changed(handler)
     local handlers = event_handlers[configuration_changed_name]
     if not handlers then
-        event_handlers[configuration_changed_name] = {handler}
+        event_handlers[configuration_changed_name] = { handler }
         script_on_configuration_changed(configuration_changed)
     else
         table.insert(handlers, handler)
@@ -144,7 +137,7 @@ end
 function Public.on_load(handler)
     local handlers = event_handlers[load_event_name]
     if not handlers then
-        event_handlers[load_event_name] = {handler}
+        event_handlers[load_event_name] = { handler }
         script.on_load(on_load)
     else
         table.insert(handlers, handler)
@@ -158,7 +151,7 @@ end
 function Public.on_nth_tick(tick, handler)
     local handlers = on_nth_tick_event_handlers[tick]
     if not handlers then
-        on_nth_tick_event_handlers[tick] = {handler}
+        on_nth_tick_event_handlers[tick] = { handler }
         script_on_nth_tick(tick, on_nth_tick_event)
     else
         table.insert(handlers, handler)

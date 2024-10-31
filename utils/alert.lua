@@ -10,18 +10,17 @@ local next = next
 local Public = {}
 
 local active_alerts = {}
-local id_counter = {0}
+local id_counter = { 0 }
 local alert_zoom_to_pos = Gui.uid_name()
 
 local on_tick
 
 Global.register(
-    {active_alerts = active_alerts, id_counter = id_counter},
+    { active_alerts = active_alerts, id_counter = id_counter },
     function(tbl)
         active_alerts = tbl.active_alerts
         id_counter = tbl.id_counter
-    end,
-    'alert'
+    end
 )
 
 local alert_frame_name = Gui.uid_name()
@@ -70,19 +69,19 @@ end
 
 ---Message to a specific player
 ---@param player LuaPlayer
----@param duration number in seconds
+---@param duration number|integer in seconds
 ---@param sound string sound to play, nil to not play anything
 local function alert_to(player, duration, sound, volume)
-    local frame_holder = player.gui.left.add({type = 'flow'})
+    local frame_holder = player.gui.left.add({ type = 'flow' })
 
     local frame =
-        frame_holder.add({type = 'frame', name = alert_frame_name, direction = 'vertical', style = 'captionless_frame'})
+        frame_holder.add({ type = 'frame', name = alert_frame_name, direction = 'vertical', style = 'captionless_frame' })
     frame.style.width = 300
 
-    local container = frame.add({type = 'flow', name = alert_container_name, direction = 'horizontal'})
+    local container = frame.add({ type = 'flow', name = alert_container_name, direction = 'horizontal' })
     container.style.horizontally_stretchable = true
 
-    local progressbar = frame.add({type = 'progressbar', name = alert_progress_name})
+    local progressbar = frame.add({ type = 'progressbar', name = alert_progress_name })
     local style = progressbar.style
     style.width = 290
     style.height = 4
@@ -113,7 +112,7 @@ local function alert_to(player, duration, sound, volume)
 
     if sound then
         volume = volume or 0.80
-        player.play_sound({path = sound, volume_modifier = volume})
+        player.play_sound({ path = sound, volume_modifier = volume })
     end
 
     return container
@@ -159,26 +158,26 @@ end
 
 on_tick =
     Token.register(
-    function(event)
-        if not next(active_alerts) then
-            Event.remove_removable_nth_tick(2, on_tick)
-            return
-        end
+        function(event)
+            if not next(active_alerts) then
+                Event.remove_removable_nth_tick(2, on_tick)
+                return
+            end
 
-        local tick = event.tick
+            local tick = event.tick
 
-        for id, frame in pairs(active_alerts) do
-            update_alert(id, frame, tick)
+            for id, frame in pairs(active_alerts) do
+                update_alert(id, frame, tick)
+            end
         end
-    end
-)
+    )
 
 ---Message a specific player, template is a callable that receives a LuaGuiElement
 ---to add contents to and a player as second argument.
 ---@param player LuaPlayer
----@param duration table
+---@param duration number|integer
 ---@param template function
----@param sound string sound to play, nil to not play anything
+---@param sound string? sound to play, nil to not play anything
 function Public.alert_player_template(player, duration, template, sound, volume)
     sound = sound or 'utility/new_objective'
     local container = alert_to(player, duration, sound, volume)
@@ -206,7 +205,7 @@ end
 ---to add contents to and a player as second argument.
 ---@param duration number
 ---@param template function
----@param sound string sound to play, nil to not play anything
+---@param sound string? sound to play, nil to not play anything
 function Public.alert_all_players_template(duration, template, sound)
     sound = sound or 'utility/new_objective'
     local players = game.connected_players
@@ -219,27 +218,27 @@ end
 ---Message all players at a given location
 ---@param player LuaPlayer
 ---@param message string
----@param color string
+---@param color string?
 function Public.alert_all_players_location(player, message, color)
     Public.alert_all_players_template(
         15,
         function(container)
             local sprite =
                 container.add {
-                type = 'sprite-button',
-                name = alert_zoom_to_pos,
-                sprite = 'utility/search_icon',
-                style = 'slot_button'
-            }
+                    type = 'sprite-button',
+                    name = alert_zoom_to_pos,
+                    sprite = 'utility/search_icon',
+                    style = 'slot_button'
+                }
 
             Gui.set_data(sprite, player.position)
 
             local label =
                 container.add {
-                type = 'label',
-                name = Public.close_alert_name,
-                caption = message
-            }
+                    type = 'label',
+                    name = Public.close_alert_name,
+                    caption = message
+                }
             local label_style = label.style
             label_style.single_line = false
             label_style.font_color = color or Color.comfy
@@ -251,7 +250,7 @@ end
 ---@param player LuaPlayer
 ---@param duration number
 ---@param message string
----@param color string
+---@param color string?
 function Public.alert_player(player, duration, message, color, sprite, volume)
     Public.alert_player_template(
         player,
@@ -262,7 +261,7 @@ function Public.alert_player(player, duration, message, color, sprite, volume)
                 sprite = sprite or 'achievement/you-are-doing-it-right',
                 style = 'slot_button'
             }
-            local label = container.add({type = 'label', name = close_alert_name, caption = message})
+            local label = container.add({ type = 'label', name = close_alert_name, caption = message })
             label.style.single_line = false
             label.style.font_color = color or Color.comfy
         end,
@@ -286,7 +285,7 @@ function Public.alert_player_warning(player, duration, message, color)
                 sprite = 'achievement/golem',
                 style = 'slot_button'
             }
-            local label = container.add({type = 'label', name = close_alert_name, caption = message})
+            local label = container.add({ type = 'label', name = close_alert_name, caption = message })
             label.style.single_line = false
             label.style.font_color = color or Color.comfy
         end
@@ -308,7 +307,7 @@ end
 ---Message to all players
 ---@param duration number
 ---@param message string
----@param color string
+---@param color? string
 function Public.alert_all_players(duration, message, color, sprite, volume)
     local players = game.connected_players
     for i = 1, #players do

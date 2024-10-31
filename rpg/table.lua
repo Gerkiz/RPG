@@ -25,6 +25,7 @@ local enable_spawning_frame_name = Gui.uid_name()
 local spell1_button_name = Gui.uid_name()
 local spell2_button_name = Gui.uid_name()
 local spell3_button_name = Gui.uid_name()
+local cooldown_indicator_name = Gui.uid_name()
 
 Global.register(
     this,
@@ -34,19 +35,25 @@ Global.register(
 )
 
 local Public = {}
+Public.events = {
+    on_spell_cast_success = Event.generate_event_name(),
+    on_spell_cast_failure = Event.generate_event_name()
+}
 
 Public.points_per_level = 5
 
-Public.experience_levels = {0}
 local level_limit = 4999
 
 if settings.startup.comfy_level_limit.value then
-    level_limit = settings.startup.comfy_level_limit.value
+    level_limit = settings.startup.comfy_level_limit.value --[[@as integer]]
 end
 
+Public.experience_levels = { 0 }
 for a = 1, level_limit, 1 do -- max level
     Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] + a * 8
 end
+
+
 
 Public.gui_settings_levels = {
     ['reset_text_label'] = 50,
@@ -63,7 +70,7 @@ Public.die_cause = {
 
 Public.nth_tick = 18001
 Public.visuals_delay = 1800
-Public.xp_floating_text_color = {157, 157, 157}
+Public.xp_floating_text_color = { 157, 157, 157 }
 
 Public.enemy_types = {
     ['unit'] = true,
@@ -80,11 +87,11 @@ Public.classes = {
 }
 
 Public.auto_allocate_nodes = {
-    {'allocations.deactivated'},
-    {'allocations.str'},
-    {'allocations.mag'},
-    {'allocations.dex'},
-    {'allocations.vit'}
+    { 'allocations.deactivated' },
+    { 'allocations.str' },
+    { 'allocations.mag' },
+    { 'allocations.dex' },
+    { 'allocations.vit' }
 }
 
 Public.auto_allocate_nodes_func = {
@@ -120,11 +127,10 @@ function Public.reset_table(migrate)
     this.rpg_extra.enable_stone_path = false
     this.rpg_extra.enable_auto_allocate = false
     this.rpg_extra.enable_aoe_punch = true
+    this.rpg_extra.grant_xp_level = nil
     this.rpg_extra.enable_aoe_punch_globally = false
     this.rpg_extra.disable_get_heal_modifier_from_using_fish = false
     this.rpg_extra.tweaked_crafting_items = {
-        ['red-wire'] = true,
-        ['green-wire'] = true,
         ['stone-furnace'] = true,
         ['wooden-chest'] = true,
         ['copper-cable'] = true,
@@ -226,8 +232,11 @@ end
 
 --- Sets value to table
 ---@param key string
-function Public.set(key)
-    if key then
+function Public.set(key, value)
+    if key and (value or value == false) then
+        this[key] = value
+        return this[key]
+    elseif key then
         return this[key]
     else
         return this
@@ -262,9 +271,11 @@ function Public.debug_log(str)
 end
 
 --- Sets surface name for rpg_v2 to use
----@param name string
+---@param name string|table
 function Public.set_surface_name(name)
-    if name then
+    if name and type(name) == 'string' then
+        this.rpg_extra.surface_name = name
+    elseif name and type(name) == 'table' then
         this.rpg_extra.surface_name = name
     else
         return error('No surface name given.', 2)
@@ -284,7 +295,7 @@ end
 
 --- Toggles the mod gui state.
 ---@param value boolean
----@param read boolean
+---@param read? boolean
 function Public.enable_mod_gui(value, read)
     if not read then
         Gui.set_mod_gui_top_frame(value or false)
@@ -388,9 +399,9 @@ function Public.enable_range_buffs(value)
 end
 
 --- Enables/disabled personal tax.
----@param value boolean
+---@param value number|integer|string
 function Public.personal_tax_rate(value)
-    this.rpg_extra.personal_tax_rate = value or false
+    this.rpg_extra.personal_tax_rate = value or 0
 
     return this.rpg_extra.personal_tax_rate
 end
@@ -467,7 +478,7 @@ function Public.migrate_new_rpg_tbl(player)
 end
 
 function Public.migrate_to_new_version()
-    -- Public.reset_table(true)
+    Public.reset_table(true)
     if this.rpg_spells then
         this.rpg_spells = nil
     end
@@ -494,18 +505,6 @@ Public.enable_spawning_frame_name = enable_spawning_frame_name
 Public.spell1_button_name = spell1_button_name
 Public.spell2_button_name = spell2_button_name
 Public.spell3_button_name = spell3_button_name
-
-local on_init = function()
-    Public.reset_table()
-end
-
-Event.on_init(on_init)
-
-Event.on_configuration_changed(
-    function()
-        print('[RPG] Migrating to new version')
-        Public.migrate_to_new_version()
-    end
-)
+Public.cooldown_indicator_name = cooldown_indicator_name
 
 return Public

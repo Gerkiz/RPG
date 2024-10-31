@@ -1,5 +1,5 @@
 --luacheck: ignore
-local branch_version = '1.1' -- define what game version we're using
+local branch_version = '2.0' -- define what game version we're using
 local sub = string.sub
 
 -- Non-applicable stages are commented out.
@@ -15,7 +15,7 @@ _STAGE = {
 }
 
 function get_game_version()
-    local get_active_branch = sub(game.active_mods.base, 3, 4)
+    local get_active_branch = sub(script.active_mods.base, 3, 4)
     local is_branch_experimental = sub(branch_version, 3, 4)
     if get_active_branch >= is_branch_experimental then
         return true
@@ -34,20 +34,20 @@ function is_loaded(module)
 end
 
 function is_game_modded()
-    if global.is_modded ~= nil then
-        return global.is_modded
+    if storage.is_modded ~= nil then
+        return storage.is_modded
     end
 
     local i = 0
     local is_modded = false
-    for _, _ in pairs(game.active_mods) do
+    for _, _ in pairs(script.active_mods) do
         i = i + 1
         if i > 1 then
             is_modded = true
         end
     end
-    if is_modded and not global.is_modded then
-        global.is_modded = true
+    if is_modded and not storage.is_modded then
+        storage.is_modded = true
     end
     return is_modded
 end

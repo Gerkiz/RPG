@@ -55,15 +55,7 @@ local modifiers = {
     [12] = 'character_running_speed_modifier'
 }
 
-function Public.check_if_exists(player)
-    if not this.modifiers[player.index] then
-        Public.reset_player_modifiers(player)
-        return
-    end
-end
-
 function Public.update_player_modifiers(player)
-    Public.check_if_exists(player)
     local player_modifiers = this.modifiers[player.index]
     if not player_modifiers then
         return
@@ -83,14 +75,22 @@ function Public.update_player_modifiers(player)
             if disabled_modifiers and disabled_modifiers[k] then
                 player[modifier] = 0
             else
-                player[modifier] = round(sum_value, 4)
+                if modifiers[k] == 'character_inventory_slots_bonus' and not this.creative_enabled then
+                    local inv = player.get_inventory(defines.inventory.character_main)
+                    if inv and #inv > this.rpg_inventory_slot_limit + 80 then
+                        player[modifier] = this.rpg_inventory_slot_limit - 20
+                    else
+                        player[modifier] = round(sum_value, 4)
+                    end
+                else
+                    player[modifier] = round(sum_value, 4)
+                end
             end
         end
     end
 end
 
 function Public.update_single_modifier(player, modifier, category, value)
-    Public.check_if_exists(player)
     local player_modifiers = this.modifiers[player.index]
     if not player_modifiers then
         return
@@ -101,13 +101,16 @@ function Public.update_single_modifier(player, modifier, category, value)
     for k, _ in pairs(player_modifiers) do
         if modifiers[k] == modifier and player_modifiers[k] then
             if category then
-                if not player_modifiers[k][category] then
-                    player_modifiers[k][category] = 0
+                if value then
+                    player_modifiers[k][category] = value
+                else
+                    player_modifiers[k][category] = nil
                 end
-                player_modifiers[k][category] = value
 
-                if category == 'rpg' and modifiers[k] == 'character_inventory_slots_bonus' and player_modifiers[k][category] >= this.rpg_inventory_slot_limit then
-                    player_modifiers[k][category] = this.rpg_inventory_slot_limit - player.force.character_inventory_slots_bonus
+                if not this.creative_enabled then
+                    if category == 'rpg' and modifiers[k] == 'character_inventory_slots_bonus' and player_modifiers[k][category] >= this.rpg_inventory_slot_limit then
+                        player_modifiers[k][category] = this.rpg_inventory_slot_limit - player.force.character_inventory_slots_bonus
+                    end
                 end
             else
                 player_modifiers[k] = value
@@ -117,7 +120,6 @@ function Public.update_single_modifier(player, modifier, category, value)
 end
 
 function Public.disable_single_modifier(player, modifier, value)
-    Public.check_if_exists(player)
     local disabled_modifiers = this.disabled_modifier[player.index]
     if not disabled_modifiers then
         return
@@ -137,7 +139,6 @@ function Public.disable_single_modifier(player, modifier, value)
 end
 
 function Public.get_single_modifier(player, modifier, category)
-    Public.check_if_exists(player)
     local player_modifiers = this.modifiers[player.index]
     if not player_modifiers then
         return
@@ -223,30 +224,5 @@ end
 Event.add(defines.events.on_player_joined_game, on_player_joined_game)
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_player_removed, on_player_removed)
-Event.on_configuration_changed(
-    function()
-        print('[Player modifiers] Migrating to new version')
-        if not this.disabled_modifier then
-            this.disabled_modifier = {}
-        end
-        if not this.modifiers then
-            this.modifiers = {}
-        end
-        if not this.rpg_inventory_slot_limit then
-            this.rpg_inventory_slot_limit = 320
-        end
-    end
-)
-
-Event.on_nth_tick( -- added because some mods really likes to reset player modifiers.
-    15,
-    function()
-        local players = game.connected_players
-        for i = 1, #players do
-            local player = players[i]
-            Public.update_player_modifiers(player)
-        end
-    end
-)
 
 return Public

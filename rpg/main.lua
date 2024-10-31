@@ -1,9 +1,10 @@
 --RPG Modules
 local Public = require 'rpg.core'
 local Gui = require 'utils.gui'
+local Color = require 'utils.color_presets'
 local Event = require 'utils.event'
-
 local Math2D = require 'math2d'
+local Explosives = require 'rpg.explosives'
 
 --RPG Settings
 local die_cause = Public.die_cause
@@ -12,6 +13,8 @@ local nth_tick = Public.nth_tick
 
 --RPG Frames
 local main_frame_name = Public.main_frame_name
+local spell_gui_frame_name = Public.spell_gui_frame_name
+local cooldown_indicator_name = Public.cooldown_indicator_name
 
 local round = math.round
 local floor = math.floor
@@ -46,9 +49,6 @@ local function on_gui_click(event)
     local shift = event.shift
 
     if element.caption ~= '✚' then
-        return
-    end
-    if element.sprite ~= 'virtual-signal/signal-red' then
         return
     end
 
@@ -138,7 +138,7 @@ local get_cause_player = {
         if not cause.player then
             return
         end
-        return {cause.player}
+        return { cause.player }
     end,
     ['combat-robot'] = function(cause)
         if not cause.last_user then
@@ -147,7 +147,7 @@ local get_cause_player = {
         if not game.players[cause.last_user.index] then
             return
         end
-        return {game.players[cause.last_user.index]}
+        return { game.players[cause.last_user.index] }
     end,
     ['car'] = function(cause)
         local players = {}
@@ -212,6 +212,7 @@ local function on_entity_died(event)
 
     local rpg_extra = Public.get('rpg_extra')
 
+
     if not event.cause or not event.cause.valid then
         return
     end
@@ -227,6 +228,7 @@ local function on_entity_died(event)
             if rpg_extra.rpg_xp_yield[entity.name] then
                 local amount = rpg_extra.rpg_xp_yield[entity.name]
                 amount = amount / 5
+
                 if rpg_extra.turret_kills_to_global_pool then
                     Public.add_to_global_pool(amount, false)
                 end
@@ -281,9 +283,11 @@ local function regen_health_player(players)
     for i = 1, #players do
         local player = players[i]
         local heal_per_tick = Public.get_heal_modifier(player)
-        if heal_per_tick <= 0 then
+        if heal_per_tick and heal_per_tick <= 0 then
             goto continue
         end
+
+        if not heal_per_tick then goto continue end
         heal_per_tick = round(heal_per_tick)
         if player and player.valid and not player.in_combat then
             if player.character and player.character.valid then
@@ -300,33 +304,32 @@ end
 local function regen_mana_player(players)
     for i = 1, #players do
         local player = players[i]
-        local mana_per_tick = Public.get_mana_modifier(player)
-        local rpg_extra = Public.get('rpg_extra')
         local rpg_t = Public.get_value_from_player(player.index)
-        if not rpg_t then
-            return
-        end
-        if mana_per_tick <= 0.1 then
-            mana_per_tick = rpg_extra.mana_per_tick
-        end
+        if rpg_t then
+            local mana_per_tick = Public.get_mana_modifier(player)
+            local rpg_extra = Public.get('rpg_extra')
+            if mana_per_tick <= 0.1 then
+                mana_per_tick = rpg_extra.mana_per_tick
+            end
 
-        if rpg_extra.force_mana_per_tick then
-            mana_per_tick = 1
-        end
+            if rpg_extra.force_mana_per_tick then
+                mana_per_tick = 1
+            end
 
-        if player and player.valid and not player.in_combat then
-            if player.character and player.character.valid then
-                if rpg_t.mana < 0 then
-                    rpg_t.mana = 0
+            if player and player.valid and not player.in_combat then
+                if player.character and player.character.valid then
+                    if rpg_t.mana < 0 then
+                        rpg_t.mana = 0
+                    end
+                    if rpg_t.mana >= rpg_t.mana_max then
+                        goto continue
+                    end
+                    rpg_t.mana = rpg_t.mana + mana_per_tick
+                    if rpg_t.mana >= rpg_t.mana_max then
+                        rpg_t.mana = rpg_t.mana_max
+                    end
+                    rpg_t.mana = (round(rpg_t.mana * 10) / 10)
                 end
-                if rpg_t.mana >= rpg_t.mana_max then
-                    goto continue
-                end
-                rpg_t.mana = rpg_t.mana + mana_per_tick
-                if rpg_t.mana >= rpg_t.mana_max then
-                    rpg_t.mana = rpg_t.mana_max
-                end
-                rpg_t.mana = (round(rpg_t.mana * 10) / 10)
             end
         end
 
@@ -378,6 +381,7 @@ local function on_entity_damaged(event)
     local entity = event.entity
     local cause = event.cause
     local original_damage_amount = event.original_damage_amount
+    local final_damage_amount = event.final_damage_amount
 
     if cause.get_inventory(defines.inventory.character_ammo)[cause.selected_gun_index].valid_for_read or cause.get_inventory(defines.inventory.character_guns)[cause.selected_gun_index].valid_for_read then
         local is_explosive_bullets_enabled = Public.get_explosive_bullets()
@@ -400,11 +404,11 @@ local function on_entity_damaged(event)
         return
     end
 
-    local position = p.position
+    local position = p.physical_position
 
     local area = {
-        left_top = {x = position.x - 5, y = position.y - 5},
-        right_bottom = {x = position.x + 5, y = position.y + 5}
+        left_top = { x = position.x - 5, y = position.y - 5 },
+        right_bottom = { x = position.x + 5, y = position.y + 5 }
     }
 
     if not is_position_near(area, entity.position) then
@@ -434,24 +438,30 @@ local function on_entity_damaged(event)
         damage = damage * random(250, 350) * 0.01
         cause.surface.create_entity(
             {
-                name = 'flying-text',
+                name = 'compi-speech-bubble',
                 position = entity.position,
                 text = '‼' .. floor(damage),
-                color = {255, 0, 0}
+                source = entity,
+                lifetime = 30
             }
         )
-        cause.surface.create_entity({name = 'blood-explosion-huge', position = entity.position})
+        cause.surface.create_entity({ name = 'blood-explosion-huge', position = entity.position })
     else
         damage = damage * random(100, 125) * 0.01
         cause.player.create_local_flying_text(
             {
                 text = floor(damage),
                 position = entity.position,
-                color = {150, 150, 150},
+                color = { 150, 150, 150 },
                 time_to_live = 90,
                 speed = 2
             }
         )
+    end
+
+    local is_explosive_bullets_enabled = Public.get_explosive_bullets()
+    if is_explosive_bullets_enabled then
+        Public.explosive_bullets(event)
     end
 
     --Cause a one punch.
@@ -463,23 +473,21 @@ local function on_entity_damaged(event)
             Public.log_aoe_punch(
                 function()
                     if success then
-                        print('[OnePunch]: Chance: ' .. chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: true' .. ' Damage: ' .. damage)
+                        print('[OnePunch]: Chance: ' ..
+                            chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: true' .. ' Damage: ' .. damage)
                     else
-                        print('[OnePunch]: Chance: ' .. chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: false' .. ' Damage: ' .. damage)
+                        print('[OnePunch]: Chance: ' ..
+                            chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: false' .. ' Damage: ' .. damage)
                     end
                 end
             )
             if success then
-                Public.aoe_punch(cause, entity, damage) -- only kill the biters if their health is below or equal to zero
+                Public.aoe_punch(cause, entity, damage, final_damage_amount) -- only kill the biters if their health is below or equal to zero
                 return
             end
         end
     end
 
-    local is_explosive_bullets_enabled = Public.get_explosive_bullets()
-    if is_explosive_bullets_enabled then
-        Public.explosive_bullets(event)
-    end
 end
 
 local function on_player_repaired_entity(event)
@@ -507,6 +515,11 @@ local function on_player_repaired_entity(event)
         return
     end
 
+    local rpg_t = Public.get_value_from_player(player.index)
+    if rpg_t.repaired_entity_delay > game.tick then
+        return
+    end
+
     Public.gain_xp(player, 0.05)
     Public.reward_mana(player, 0.2)
 
@@ -514,6 +527,9 @@ local function on_player_repaired_entity(event)
     if repair_speed <= 0 then
         return
     end
+
+    rpg_t.repaired_entity_delay = game.tick + 20
+
     entity.health = entity.health + repair_speed
 end
 
@@ -531,6 +547,7 @@ local function on_player_rotated_entity(event)
     if rpg_t.rotated_entity_delay > game.tick then
         return
     end
+
     rpg_t.rotated_entity_delay = game.tick + 20
     Public.gain_xp(player, 0.20)
 end
@@ -605,6 +622,7 @@ local function on_pre_player_mined_item(event)
     end
 
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then return end
     if rpg_t.last_mined_entity_position.x == entity.position.x and rpg_t.last_mined_entity_position.y == entity.position.y then
         return
     end
@@ -620,7 +638,7 @@ local function on_pre_player_mined_item(event)
     if entity.type == 'resource' then
         xp_amount = 0.9 * distance_multiplier
     else
-        xp_amount = (1.5 + entity.prototype.max_health * xp_modifier_when_mining) * distance_multiplier
+        xp_amount = (1.5 + entity.max_health * xp_modifier_when_mining) * distance_multiplier
     end
 
     if player.gui.screen[main_frame_name] then
@@ -660,12 +678,36 @@ local function on_player_crafted_item(event)
     if tweaked_crafting_items_enabled then
         if item and item.valid then
             if is_blacklisted[item.name] then
-                amount = 0.2
+                return -- return if the item is blacklisted
             end
         end
     end
 
     local final_xp = recipe.energy * amount
+
+    local get_dex_modifier = Public.get_dex_modifier(player)
+    if not get_dex_modifier then return end
+
+    if get_dex_modifier >= 10 then
+        local chance = Public.get_crafting_bonus_chance(player) * 10
+        local r = random(0, 1999)
+        local success = r < chance
+        if success then
+            Public.set_crafting_boost(player, get_dex_modifier)
+            local d = random(0, 2999)
+            local item_dupe = d < chance
+            if item_dupe and final_xp < 6 then
+                local reward = {
+                    name = item.name,
+                    count = 1
+                }
+                Public.increment_duped_crafted_items(player)
+                if player.can_insert(reward) then
+                    player.insert(reward)
+                end
+            end
+        end
+    end
 
     Public.gain_xp(player, final_xp)
     Public.reward_mana(player, amount)
@@ -688,12 +730,14 @@ local function on_player_joined_game(event)
     local player = game.get_player(event.player_index)
     local rpg_t = Public.get_value_from_player(player.index)
     local rpg_extra = Public.get('rpg_extra')
+
     if not rpg_t then
         Public.rpg_reset_player(player)
         if rpg_extra.reward_new_players > 10 then
             Public.gain_xp(player, rpg_extra.reward_new_players)
         end
     end
+
     for _, p in pairs(game.connected_players) do
         Public.draw_level_text(p)
     end
@@ -705,9 +749,9 @@ local function on_player_joined_game(event)
 end
 
 local function get_near_coord_modifier(range)
-    local coord = {x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2)}
+    local coord = { x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2) }
     for _ = 1, 5, 1 do
-        local new_coord = {x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2)}
+        local new_coord = { x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2) }
         if new_coord.x ^ 2 + new_coord.y ^ 2 < coord.x ^ 2 + coord.y ^ 2 then
             coord = new_coord
         end
@@ -732,7 +776,7 @@ local function damage_entity(e)
         return
     end
 
-    e.surface.create_entity({name = 'ground-explosion', position = e.position})
+    e.surface.create_entity({ name = 'ground-explosion', position = e.position })
 
     if e.type == 'entity-ghost' then
         e.destroy()
@@ -746,14 +790,14 @@ local function damage_entity(e)
 end
 
 local function floaty_hearts(entity, c)
-    local position = {x = entity.position.x - 0.75, y = entity.position.y - 1}
+    local position = { x = entity.position.x - 0.75, y = entity.position.y - 1 }
     local b = 1.35
     for _ = 1, c, 1 do
         local p = {
             (position.x + 0.4) + (b * -1 + random(0, b * 20) * 0.1),
             position.y + (b * -1 + random(0, b * 20) * 0.1)
         }
-        entity.surface.create_entity({name = 'flying-text', position = p, text = '♥', color = {random(150, 255), 0, 255}})
+        entity.surface.create_entity({ name = 'compi-speech-bubble', position = p, text = '♥', source = entity, lifetime = 30 })
     end
 end
 
@@ -763,8 +807,10 @@ local function tame_unit_effects(player, entity)
     rendering.draw_text {
         text = '~' .. player.name .. "'s pet~",
         surface = player.surface,
-        target = entity,
-        target_offset = {0, -2.6},
+        target = {
+            entity = entity,
+            offset = { 0, -2.6 },
+        },
         color = {
             r = player.color.r * 0.6 + 0.25,
             g = player.color.g * 0.6 + 0.25,
@@ -799,28 +845,11 @@ local function on_player_used_capsule(event)
         return
     end
 
-    local item = event.item
-
-    if not item then
-        return
-    end
-
-    local name = item.name
-
-    if name ~= 'raw-fish' then
-        return
-    end
-
-    Public.get_heal_modifier_from_using_fish(player)
-
     local rpg_t = Public.get_value_from_player(player.index)
 
     if not rpg_t.enable_entity_spawn then
+        player.print('[RPG] You must enable the button in the spell GUI to cast a spell.', { color = Color.warning })
         return
-    end
-
-    if rpg_t.last_spawned >= game.tick then
-        return Public.cast_spell(player, true)
     end
 
     local mana = rpg_t.mana
@@ -831,15 +860,22 @@ local function on_player_used_capsule(event)
         return
     end
 
-    local position = event.position
+    if spell.enforce_cooldown then
+        if Public.is_cooldown_active_for_player(player) then
+            Public.cast_spell(player, true)
+            return
+        end
+    end
+
+    local position = event.cursor_position
     if not position then
         return
     end
 
     local radius = 15
     local area = {
-        left_top = {x = position.x - radius, y = position.y - radius},
-        right_bottom = {x = position.x + radius, y = position.y + radius}
+        left_top = { x = position.x - radius, y = position.y - radius },
+        right_bottom = { x = position.x + radius, y = position.y + radius }
     }
 
     if not spell.enabled then
@@ -850,7 +886,7 @@ local function on_player_used_capsule(event)
         return Public.cast_spell(player, true)
     end
 
-    if not Math2D.bounding_box.contains_point(area, player.position) then
+    if not Math2D.bounding_box.contains_point(area, player.physical_position) then
         Public.cast_spell(player, true)
         return
     end
@@ -861,10 +897,10 @@ local function on_player_used_capsule(event)
 
     local target_pos
     if spell.target then
-        target_pos = {position.x, position.y}
+        target_pos = { position.x, position.y }
     elseif projectile_types[spell.entityName] then
         local coord_modifier = get_near_coord_modifier(projectile_types[spell.entityName].max_range)
-        target_pos = {position.x + coord_modifier.x, position.y + coord_modifier.y}
+        target_pos = { position.x + coord_modifier.x, position.y + coord_modifier.y }
     end
 
     local range
@@ -881,13 +917,6 @@ local function on_player_used_capsule(event)
         force = 'player'
     end
 
-    if spell.check_if_active then
-        if rpg_t.has_custom_spell_active then
-            Public.cast_spell(player, true)
-            return
-        end
-    end
-
     local data = {
         self = spell,
         player = player,
@@ -898,6 +927,7 @@ local function on_player_used_capsule(event)
         target_pos = target_pos,
         range = range,
         tame_unit_effects = tame_unit_effects,
+        explosives = Explosives,
         rpg_t = rpg_t
     }
 
@@ -907,16 +937,33 @@ local function on_player_used_capsule(event)
         cast_spell = Public.cast_spell
     }
 
+    rpg_t.amount = 0
+
     local cast_spell = spell.callback(data, funcs)
     if not cast_spell then
         return
     end
 
-    if spell.enforce_cooldown then
-        Public.register_cooldown_for_player(player, spell)
+    if rpg_t.amount == 0 then
+        rpg_t.amount = 1
     end
 
-    rpg_t.last_spawned = game.tick + spell.cooldown
+    Event.raise(Public.events.on_spell_cast_success,
+        { player_index = player.index, spell_name = spell.entityName, amount = rpg_t.amount })
+
+    if spell.enforce_cooldown then
+        if player.gui.screen[spell_gui_frame_name] then
+            local f = player.gui.screen[spell_gui_frame_name]
+            if f then
+                if f[cooldown_indicator_name] then
+                    Public.register_cooldown_for_player_progressbar(player, spell)
+                end
+            end
+        else
+            Public.register_cooldown_for_player(player, spell)
+        end
+    end
+
     Public.update_mana(player)
 
     local reward_xp = spell.mana_cost * 0.085
@@ -967,10 +1014,11 @@ Event.add(defines.events.on_player_repaired_entity, on_player_repaired_entity)
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_player_rotated_entity, on_player_rotated_entity)
 Event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
-Event.add(defines.events.on_player_used_capsule, on_player_used_capsule)
+Event.add("ctrl-cast-spell", on_player_used_capsule)
 Event.add(defines.events.on_player_changed_surface, on_player_changed_surface)
 Event.add(defines.events.on_player_removed, on_player_removed)
 Event.on_nth_tick(10, tick)
+Event.on_nth_tick(2, Public.update_tidal_wave)
 
 Event.add(
     defines.events.on_gui_closed,

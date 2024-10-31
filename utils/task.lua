@@ -37,7 +37,7 @@ local primitives = {
 }
 
 Global.register(
-    {callbacks = callbacks, task_queue = task_queue, primitives = primitives},
+    { callbacks = callbacks, task_queue = task_queue, primitives = primitives },
     function(tbl)
         callbacks = tbl.callbacks
         task_queue = tbl.task_queue
@@ -101,7 +101,7 @@ function Task.set_timeout_in_ticks(ticks, func_token, params)
         error('cannot call when game is not available', 2)
     end
     local time = game.tick + ticks
-    local callback = {time = time, func_token = func_token, params = params}
+    local callback = { time = time, func_token = func_token, params = params }
     PriorityQueue_push(callbacks, callback)
 end
 
@@ -127,7 +127,7 @@ end
 function Task.queue_task(func_token, params, weight)
     weight = weight or 1
     primitives.total_task_weight = primitives.total_task_weight + weight
-    Queue_push(task_queue, {func_token = func_token, params = params, weight = weight})
+    Queue_push(task_queue, { func_token = func_token, params = params, weight = weight })
 end
 
 function Task.get_queue_speed()

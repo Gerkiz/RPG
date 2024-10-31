@@ -61,15 +61,15 @@
 -- local Event = require 'utils.event'
 --
 -- If you want to remove the handler you will need to keep a reference to it.
--- global.handler = function(event)
+-- storage.handler = function(event)
 --     game.print(serpent.block(event)) -- prints the content of the event table to console.
 -- end
 --
 -- The below code would typically be used at the command console.
--- Event.add_removable_function(defines.events.on_built_entity, global.handler)
+-- Event.add_removable_function(defines.events.on_built_entity, storage.handler)
 --
 -- When you no longer need the handler.
--- Event.remove_removable_function(defines.events.on_built_entity, global.handler)
+-- Event.remove_removable_function(defines.events.on_built_entity, storage.handler)
 --
 -- ** Other Events **
 --
@@ -105,6 +105,7 @@ local core_add = EventCore.add
 local core_on_init = EventCore.on_init
 local core_on_load = EventCore.on_load
 local core_on_nth_tick = EventCore.on_nth_tick
+local raise_event = script.raise_event
 local core_on_configuration_changed = EventCore.on_configuration_changed
 local stage_load = _STAGE.load
 local script_on_event = script.on_event
@@ -181,6 +182,17 @@ function Event.on_init(handler)
     core_on_init(handler)
 end
 
+--- This exists only to become more easily available if you are already requiring the event module.
+function Event.raise(handler, data)
+    if data then
+        if not type(data) == 'table' then
+            return error('When raising an event, data must be of type table')
+        end
+    end
+
+    raise_event(handler, data or {})
+end
+
 --- Register a handler for the script.on_load event.
 -- This function must be called in the control stage or in Event.on_init or Event.on_load
 -- See documentation at top of file for details on using events.
@@ -231,7 +243,7 @@ function Event.add_removable(event_name, token)
 
     local tokens = token_handlers[event_name]
     if not tokens then
-        token_handlers[event_name] = {token}
+        token_handlers[event_name] = { token }
     else
         tokens[#tokens + 1] = token
     end
@@ -296,7 +308,7 @@ function Event.add_removable_function(event_name, func, name)
         funcs = function_handlers[name]
     end
 
-    funcs[#funcs + 1] = {event_name = event_name, handler = func}
+    funcs[#funcs + 1] = { event_name = event_name, handler = func }
 
     local func_table = function_table[name]
     if not func_table then
@@ -304,7 +316,7 @@ function Event.add_removable_function(event_name, func, name)
         func_table = function_table[name]
     end
 
-    func_table[#func_table + 1] = {event_name = event_name, handler = f}
+    func_table[#func_table + 1] = { event_name = event_name, handler = f }
 
     if handlers_added then
         core_add(event_name, f)
@@ -366,7 +378,7 @@ function Event.add_removable_nth_tick(tick, token)
 
     local tokens = token_nth_tick_handlers[tick]
     if not tokens then
-        token_nth_tick_handlers[tick] = {token}
+        token_nth_tick_handlers[tick] = { token }
     else
         tokens[#tokens + 1] = token
     end
@@ -430,7 +442,7 @@ function Event.add_removable_nth_tick_function(tick, func, name)
         funcs = function_nth_tick_handlers[name]
     end
 
-    funcs[#funcs + 1] = {tick = tick, handler = func}
+    funcs[#funcs + 1] = { tick = tick, handler = func }
 
     local func_table = function_nth_tick_table[name]
     if not func_table then
@@ -438,7 +450,7 @@ function Event.add_removable_nth_tick_function(tick, func, name)
         func_table = function_nth_tick_table[name]
     end
 
-    func_table[#func_table + 1] = {tick = tick, handler = f}
+    func_table[#func_table + 1] = { tick = tick, handler = f }
 
     if handlers_added then
         core_on_nth_tick(tick, f)
@@ -495,13 +507,8 @@ end
 
 --- Generate a new, unique event ID.
 -- @param <string> name of the event/variable that is exposed
-function Event.generate_event_name(name)
+function Event.generate_event_name()
     local event_id = generate_event_name()
-
-    -- If we're in debug, add the event ID into defines.events for the debuggertron's event module
-    if _DEBUG then
-        defines.events[name] = event_id -- luacheck: ignore 122
-    end
 
     return event_id
 end
@@ -510,7 +517,7 @@ function Event.add_event_filter(event, filter)
     local current_filters = script.get_event_filter(event)
 
     if not current_filters then
-        current_filters = {filter}
+        current_filters = { filter }
     else
         table.insert(current_filters, filter)
     end
@@ -544,7 +551,7 @@ local function add_handlers()
                 func_handler = function_table[name]
             end
 
-            func_handler[#func_handler + 1] = {event_name = e_name, handler = handler}
+            func_handler[#func_handler + 1] = { event_name = e_name, handler = handler }
             core_add(e_name, handler)
         end
     end
@@ -567,7 +574,7 @@ local function add_handlers()
                 func_handler = function_nth_tick_table[name]
             end
 
-            func_handler[#func_handler + 1] = {tick = tick, handler = handler}
+            func_handler[#func_handler + 1] = { tick = tick, handler = handler }
             core_on_nth_tick(tick, handler)
         end
     end

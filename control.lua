@@ -2,11 +2,13 @@ require 'utils.data_stages'
 _LIFECYCLE = _STAGE.control -- Control stage
 local Event = require 'utils.event'
 require 'utils.utils'
+require 'rpg.core'
 local RPG = require 'rpg.main'
 require 'utils.player_modifiers'
 
 Event.on_init(
     function()
+        RPG.reset_table()
         RPG.rpg_reset_all_players()
     end
 )

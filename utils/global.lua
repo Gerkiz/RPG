@@ -5,7 +5,7 @@ local Global = {
     filepath = {}
 }
 
-global.tokens = {}
+storage.tokens = {}
 
 local concat = table.concat
 
@@ -20,7 +20,7 @@ function Global.set_global(tbl)
     Global.filepath[filepath] = Global.index
     Global.names[filepath] = concat {Global.filepath[filepath], ' - ', filepath}
 
-    global.tokens[filepath] = tbl
+    storage.tokens[filepath] = tbl
 
     return Global.index, filepath
 end
@@ -29,8 +29,8 @@ end
 ---@param token number|string
 ---@return any|nil
 function Global.get_global(token)
-    if global.tokens[token] then
-        return global.tokens[token]
+    if storage.tokens[token] then
+        return storage.tokens[token]
     end
 end
 
@@ -39,7 +39,7 @@ function Global.register(tbl, callback)
 
     Event.on_load(
         function()
-            if global.tokens[token] then
+            if storage.tokens[token] then
                 callback(Global.get_global(token))
             else
                 callback(Global.get_global(filepath))
@@ -62,7 +62,7 @@ function Global.register_init(tbl, init_handler, callback)
 
     Event.on_load(
         function()
-            if global.tokens[token] then
+            if storage.tokens[token] then
                 callback(Global.get_global(token))
             else
                 callback(Global.get_global(filepath))
