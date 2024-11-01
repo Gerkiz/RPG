@@ -1,7 +1,7 @@
 local Event = require 'utils.event'
 local Global = require 'utils.global'
 local Gui = require 'utils.gui'
-local Token = require 'utils.token'
+local Task = require 'utils.task_token'
 local Color = require 'utils.color_presets'
 
 local pairs = pairs
@@ -33,6 +33,41 @@ local close_alert_name = Gui.uid_name()
 -- own name you can use Public.close_alert(element)
 Public.close_alert_name = close_alert_name
 
+local delay_print_alert_token =
+    Task.register(
+        function(event)
+            local text = event.text
+            if not text then
+                return
+            end
+
+            local ttl = event.ttl
+            if not ttl then
+                ttl = 60
+            end
+
+            local sprite = event.sprite
+            local color = event.color
+
+            Public.alert_all_players(ttl, text, color, sprite, 1)
+        end
+    )
+
+Public.set_timeout_in_ticks_alert = function(delay, data)
+    if not data then
+        return error('Data was not provided', 2)
+    end
+    if type(data) ~= 'table' then
+        return error("Data must be of type 'table'", 2)
+    end
+
+    if not delay then
+        return error('No delay was provided', 2)
+    end
+
+    Task.set_timeout_in_ticks(delay, delay_print_alert_token, data)
+end
+
 ---Creates a unique ID for a alert message
 local function autoincrement()
     local id = id_counter[1] + 1
@@ -63,20 +98,24 @@ function Public.close_alert(element)
     end
 
     local data = Gui.get_data(alert)
+    if not data then
+        return
+    end
+
     active_alerts[data.alert_id] = nil
     Gui.destroy(alert)
 end
 
 ---Message to a specific player
 ---@param player LuaPlayer
----@param duration number|integer in seconds
+---@param duration number in seconds
 ---@param sound string sound to play, nil to not play anything
 local function alert_to(player, duration, sound, volume)
     local frame_holder = player.gui.left.add({ type = 'flow' })
 
-    local frame =
-        frame_holder.add({ type = 'frame', name = alert_frame_name, direction = 'vertical', style = 'captionless_frame' })
+    local frame = frame_holder.add({ type = 'frame', name = alert_frame_name, direction = 'vertical' })
     frame.style.width = 300
+    frame.style.padding = 3
 
     local container = frame.add({ type = 'flow', name = alert_container_name, direction = 'horizontal' })
     container.style.horizontally_stretchable = true
@@ -111,7 +150,7 @@ local function alert_to(player, duration, sound, volume)
     active_alerts[id] = frame_holder
 
     if sound then
-        volume = volume or 0.80
+        volume = volume or 0.60
         player.play_sound({ path = sound, volume_modifier = volume })
     end
 
@@ -121,9 +160,19 @@ end
 local function zoom_to_pos(event)
     local player = event.player
     local element = event.element
-    local position = Gui.get_data(element)
+    local data = Gui.get_data(element)
+    if not data then return end
 
-    player.zoom_to_world(position, 0.5)
+    if player.controller_type == defines.controllers.remote then
+        return
+    end
+
+    player.set_controller({
+        type = defines.controllers.remote,
+        position = data.position,
+        surface = player.surface,
+        zoom = 4
+    })
 end
 
 local close_alert = Public.close_alert
@@ -144,6 +193,10 @@ local function update_alert(id, frame, tick)
     end
 
     local data = Gui.get_data(frame)
+    if not data then
+        return
+    end
+
     local end_tick = data.end_tick
 
     if tick > end_tick then
@@ -157,7 +210,7 @@ local function update_alert(id, frame, tick)
 end
 
 on_tick =
-    Token.register(
+    Task.register(
         function(event)
             if not next(active_alerts) then
                 Event.remove_removable_nth_tick(2, on_tick)
@@ -175,9 +228,9 @@ on_tick =
 ---Message a specific player, template is a callable that receives a LuaGuiElement
 ---to add contents to and a player as second argument.
 ---@param player LuaPlayer
----@param duration number|integer
+---@param duration number
 ---@param template function
----@param sound string? sound to play, nil to not play anything
+---@param sound string|nil sound to play, nil to not play anything
 function Public.alert_player_template(player, duration, template, sound, volume)
     sound = sound or 'utility/new_objective'
     local container = alert_to(player, duration, sound, volume)
@@ -205,7 +258,7 @@ end
 ---to add contents to and a player as second argument.
 ---@param duration number
 ---@param template function
----@param sound string? sound to play, nil to not play anything
+---@param sound string|nil sound to play, nil to not play anything
 function Public.alert_all_players_template(duration, template, sound)
     sound = sound or 'utility/new_objective'
     local players = game.connected_players
@@ -217,11 +270,12 @@ end
 
 ---Message all players at a given location
 ---@param player LuaPlayer
----@param message string
----@param color string?
-function Public.alert_all_players_location(player, message, color)
+---@param message string|table
+---@param color string|nil
+function Public.alert_all_players_location(player, message, color, duration)
+    local length = duration or 15
     Public.alert_all_players_template(
-        15,
+        length,
         function(container)
             local sprite =
                 container.add {
@@ -249,8 +303,8 @@ end
 ---Message to a specific player
 ---@param player LuaPlayer
 ---@param duration number
----@param message string
----@param color string?
+---@param message string|table
+---@param color string|nil
 function Public.alert_player(player, duration, message, color, sprite, volume)
     Public.alert_player_template(
         player,
@@ -273,7 +327,7 @@ end
 ---Message to a specific player as warning
 ---@param player LuaPlayer
 ---@param duration number
----@param message string
+---@param message string|table
 ---@param color string|nil
 function Public.alert_player_warning(player, duration, message, color)
     Public.alert_player_template(
@@ -295,7 +349,7 @@ end
 ---Message to all players of a given force
 ---@param force LuaForce
 ---@param duration number
----@param message string
+---@param message string|table
 function Public.alert_force(force, duration, message)
     local players = force.connected_players
     for i = 1, #players do
@@ -306,8 +360,8 @@ end
 
 ---Message to all players
 ---@param duration number
----@param message string
----@param color? string
+---@param message string|table
+---@param color string|nil
 function Public.alert_all_players(duration, message, color, sprite, volume)
     local players = game.connected_players
     for i = 1, #players do

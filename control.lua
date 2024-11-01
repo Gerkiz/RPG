@@ -19,7 +19,7 @@ end
 Event.on_nth_tick(
     60,
     function()
-        if settings.global.comfy_enable_mod_gui.value then
+        if settings.global.rpg_mod_gui_top_frame.value then
             RPG.enable_mod_gui(true)
         else
             RPG.enable_mod_gui(false)

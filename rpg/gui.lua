@@ -40,7 +40,7 @@ function Public.draw_gui_char_button(player)
         'RPG\nHold [color=yellow]SHIFT[/color] and press [color=yellow]LMB[/color] to quickly access the spells frame.'
     end
 
-    if ComfyGui.get_mod_gui_top_frame() then
+    if ComfyGui.get_mod_gui_top_frame() and settings.global.rpg_mod_gui_top_frame.value then
         local b =
             ComfyGui.add_mod_button(
                 player,
@@ -64,23 +64,24 @@ function Public.draw_gui_char_button(player)
         if player.gui.top[draw_main_frame_name] then
             return
         end
-        local b =
+        local button =
             player.gui.top.add(
                 {
                     type = 'sprite-button',
                     name = draw_main_frame_name,
-                    caption = '[RPG]',
-                    tooltip = 'RPG',
+                    caption = 'RPG',
+                    tooltip = tooltip,
                     style = Gui.button_style
                 }
             )
-        b.style.font_color = { 0, 0, 0 }
-        b.style.font = 'default-semibold'
-        b.style.minimal_height = 38
-        b.style.maximal_height = 38
-        b.style.minimal_width = 50
-        b.style.padding = 0
-        b.style.margin = 0
+        button.style.font_color = { r = 0.11, g = 0.8, b = 0.44 }
+        button.style.font = 'heading-1'
+        button.style.minimal_height = 40
+        button.style.maximal_width = 55
+        button.style.minimal_width = 55
+        button.style.maximal_height = 38
+        button.style.padding = 1
+        button.style.margin = 0
     end
 end
 

@@ -310,7 +310,7 @@ function Public.enable_mod_gui(value, read)
                 top.mod_gui_top_frame.visible = true
             end
             for _, child in pairs(top.children) do
-                if child.caption == '[RPG]' then
+                if child.caption == 'RPG' then
                     child.destroy()
                     Public.draw_gui_char_button(player)
                 end

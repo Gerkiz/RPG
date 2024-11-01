@@ -18,7 +18,7 @@ local on_pre_hidden_handlers = {}
 local data = {}
 local element_map = {}
 local settings = {
-    mod_gui_top_frame = false,
+    mod_gui_top_frame = settings.global.rpg_mod_gui_top_frame.value or false,
     disabled_tabs = {}
 }
 
@@ -57,6 +57,16 @@ end
 local main_frame_name = Public.uid_name()
 local main_button_name = Public.uid_name()
 local close_button_name = Public.uid_name()
+
+if not Public.mod_gui_button_enabled then
+    Public.button_style = nil
+end
+Public.top_main_gui_button = main_button_name
+Public.main_frame_name = main_frame_name
+Public.frame_style = 'non_draggable_frame'
+Public.button_style = 'mod_gui_button'
+Public.top_flow_button_enabled_style = 'menu_button_continue'
+Public.top_flow_button_disabled_style = Public.button_style
 
 -- Associates data with the LuaGuiElement. If data is nil then removes the data
 function Public.set_data(element, value)

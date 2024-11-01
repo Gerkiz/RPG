@@ -7,12 +7,6 @@ data:extend {
     },
     {
         type = 'bool-setting',
-        name = 'comfy_enable_mod_gui',
-        setting_type = 'runtime-global',
-        default_value = true
-    },
-    {
-        type = 'bool-setting',
         name = 'comfy_enable_health_and_mana_bars',
         setting_type = 'runtime-global',
         default_value = true
@@ -57,5 +51,12 @@ data:extend {
         name = 'comfy_disable_cooldown',
         setting_type = 'startup',
         default_value = true
-    }
+    },
+    {
+        type = 'bool-setting',
+        name = 'rpg_mod_gui_top_frame',
+        setting_type = 'runtime-global',
+        default_value = true,
+        order = 'a'
+    },
 }
