@@ -106,6 +106,10 @@ remote.call("RPG", "add_new_spell", spell)
 
 None? Let me know if you run into any issues.
 
+## Localization
+
+Russian - Artanis_Mattias
+
 ## Information
 
 This version of RPG is the one that will be always up to date. We run this module in our scenario that we host at Comfy.
