@@ -29,10 +29,9 @@ end
 local uid_counter = 2000
 
 ---@return integer
-function Token.uid()
+function Token.uid(prefix)
     uid_counter = uid_counter + 1
-
-    return uid_counter
+    return prefix and prefix .. '_' .. uid_counter or uid_counter
 end
 
 return Token

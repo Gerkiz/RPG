@@ -6,7 +6,9 @@ local mod_gui = require('__core__/lualib/mod-gui')
 local tostring = tostring
 local next = next
 
-local Public = {}
+local Public = {
+    mod_prefix = 'rpg'
+}
 
 -- local to this file
 local main_gui_tabs = {}
@@ -18,7 +20,7 @@ local on_pre_hidden_handlers = {}
 local data = {}
 local element_map = {}
 local settings = {
-    mod_gui_top_frame = settings.global.rpg_mod_gui_top_frame.value or false,
+    mod_gui_top_frame = true,
     disabled_tabs = {}
 }
 
@@ -47,11 +49,11 @@ Public.x_icon = 'rpg_x_icon'
 Public.info_icon = 'rpg_info_icon'
 
 function Public.uid_name()
-    return tostring(Token.uid())
+    return tostring(Token.uid(Public.mod_prefix))
 end
 
 function Public.uid()
-    return Token.uid()
+    return Token.uid(Public.mod_prefix)
 end
 
 local main_frame_name = Public.uid_name()
@@ -459,13 +461,15 @@ end
 
 function Public.clear_all_center_frames(player)
     for _, child in pairs(player.gui.center.children) do
-        child.destroy()
+        if child.name:find('rpg_') then
+            child.destroy()
+        end
     end
 end
 
 function Public.clear_all_screen_frames(player)
     for _, child in pairs(player.gui.screen.children) do
-        if not screen_elements[child.name] then
+        if not screen_elements[child.name] and child.name:find('rpg_') then
             child.destroy()
         end
     end
@@ -473,10 +477,12 @@ end
 
 function Public.clear_all_active_frames(player)
     for _, child in pairs(player.gui.left.children) do
-        child.destroy()
+        if child.name:find('rpg_') then
+            child.destroy()
+        end
     end
     for _, child in pairs(player.gui.screen.children) do
-        if not screen_elements[child.name] then
+        if not screen_elements[child.name] and child.name:find('rpg_') then
             child.destroy()
         end
     end

@@ -1039,11 +1039,17 @@ end
 
 function Public.get_life_on_hit(player)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return false
+    end
     return (rpg_t.vitality - 10) * 0.4
 end
 
 function Public.get_aoe_punch_chance(player)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return false
+    end
     if rpg_t.strength < 100 then
         return 0
     end
@@ -1056,6 +1062,9 @@ end
 
 function Public.get_crafting_bonus_chance(player)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return false
+    end
     if rpg_t.dexterity < 100 then
         return 0
     end
@@ -1068,6 +1077,9 @@ end
 
 function Public.get_extra_following_robots(player)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return false
+    end
     local strength = rpg_t.strength
     local count = round(strength / 2 * 0.03, 3)
     return count
@@ -1075,11 +1087,17 @@ end
 
 function Public.get_magicka(player)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return false
+    end
     return (rpg_t.magicka - 10) * 0.080
 end
 
 function Public.register_cooldown_for_spell(player)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return
+    end
 
     local active_spell = Public.get_spell_by_name(rpg_t, rpg_t.dropdown_select_name)
 
@@ -1096,6 +1114,9 @@ end
 
 function Public.is_cooldown_active_for_player(player)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return false
+    end
 
     local active_spell = Public.get_spell_by_name(rpg_t, rpg_t.dropdown_select_name)
 
@@ -1152,6 +1173,9 @@ show_cooldown_progressbar =
             end
 
             local rpg_t = Public.get_value_from_player(player.index)
+            if not rpg_t then
+                return
+            end
 
             local active_spell = Public.get_spell_by_name(rpg_t, rpg_t.dropdown_select_name)
             if event.name ~= active_spell.entityName then
@@ -1181,6 +1205,9 @@ show_cooldown =
             local now = game.tick
             if now >= tick then
                 local rpg_t = Public.get_value_from_player(player.index)
+                if not rpg_t then
+                    return
+                end
                 rpg_t.cooldown_enabled = nil
                 return
             end
@@ -1214,6 +1241,9 @@ Public.show_cooldown = show_cooldown
 
 function Public.register_cooldown_for_player(player, spell)
     local rpg_t = Public.get_value_from_player(player.index)
+    if not rpg_t then
+        return
+    end
     if rpg_t.cooldown_enabled then
         return
     end
