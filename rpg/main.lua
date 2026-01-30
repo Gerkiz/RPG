@@ -138,7 +138,7 @@ local get_cause_player = {
         if not cause.player then
             return
         end
-        return { cause.player }
+        return {cause.player}
     end,
     ['combat-robot'] = function(cause)
         if not cause.last_user then
@@ -147,7 +147,7 @@ local get_cause_player = {
         if not game.players[cause.last_user.index] then
             return
         end
-        return { game.players[cause.last_user.index] }
+        return {game.players[cause.last_user.index]}
     end,
     ['car'] = function(cause)
         local players = {}
@@ -211,7 +211,6 @@ local function on_entity_died(event)
     end
 
     local rpg_extra = Public.get('rpg_extra')
-
 
     if not event.cause or not event.cause.valid then
         return
@@ -287,7 +286,9 @@ local function regen_health_player(players)
             goto continue
         end
 
-        if not heal_per_tick then goto continue end
+        if not heal_per_tick then
+            goto continue
+        end
         heal_per_tick = round(heal_per_tick)
         if player and player.valid and not player.in_combat then
             if player.character and player.character.valid then
@@ -407,8 +408,8 @@ local function on_entity_damaged(event)
     local position = p.physical_position
 
     local area = {
-        left_top = { x = position.x - 5, y = position.y - 5 },
-        right_bottom = { x = position.x + 5, y = position.y + 5 }
+        left_top = {x = position.x - 5, y = position.y - 5},
+        right_bottom = {x = position.x + 5, y = position.y + 5}
     }
 
     if not is_position_near(area, entity.position) then
@@ -445,14 +446,14 @@ local function on_entity_damaged(event)
                 lifetime = 30
             }
         )
-        cause.surface.create_entity({ name = 'blood-explosion-huge', position = entity.position })
+        cause.surface.create_entity({name = 'blood-explosion-huge', position = entity.position})
     else
         damage = damage * random(100, 125) * 0.01
         cause.player.create_local_flying_text(
             {
                 text = floor(damage),
                 position = entity.position,
-                color = { 150, 150, 150 },
+                color = {150, 150, 150},
                 time_to_live = 90,
                 speed = 2
             }
@@ -473,11 +474,9 @@ local function on_entity_damaged(event)
             Public.log_aoe_punch(
                 function()
                     if success then
-                        print('[OnePunch]: Chance: ' ..
-                            chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: true' .. ' Damage: ' .. damage)
+                        print('[OnePunch]: Chance: ' .. chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: true' .. ' Damage: ' .. damage)
                     else
-                        print('[OnePunch]: Chance: ' ..
-                            chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: false' .. ' Damage: ' .. damage)
+                        print('[OnePunch]: Chance: ' .. chance .. ' Chance to hit:  ' .. chance_to_hit .. ' Success: false' .. ' Damage: ' .. damage)
                     end
                 end
             )
@@ -487,7 +486,6 @@ local function on_entity_damaged(event)
             end
         end
     end
-
 end
 
 local function on_player_repaired_entity(event)
@@ -622,7 +620,9 @@ local function on_pre_player_mined_item(event)
     end
 
     local rpg_t = Public.get_value_from_player(player.index)
-    if not rpg_t then return end
+    if not rpg_t then
+        return
+    end
     if rpg_t.last_mined_entity_position.x == entity.position.x and rpg_t.last_mined_entity_position.y == entity.position.y then
         return
     end
@@ -686,7 +686,9 @@ local function on_player_crafted_item(event)
     local final_xp = recipe.energy * amount
 
     local get_dex_modifier = Public.get_dex_modifier(player)
-    if not get_dex_modifier then return end
+    if not get_dex_modifier then
+        return
+    end
 
     if get_dex_modifier >= 10 then
         local chance = Public.get_crafting_bonus_chance(player) * 10
@@ -749,9 +751,9 @@ local function on_player_joined_game(event)
 end
 
 local function get_near_coord_modifier(range)
-    local coord = { x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2) }
+    local coord = {x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2)}
     for _ = 1, 5, 1 do
-        local new_coord = { x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2) }
+        local new_coord = {x = (range * -1) + random(0, range * 2), y = (range * -1) + random(0, range * 2)}
         if new_coord.x ^ 2 + new_coord.y ^ 2 < coord.x ^ 2 + coord.y ^ 2 then
             coord = new_coord
         end
@@ -776,7 +778,7 @@ local function damage_entity(e)
         return
     end
 
-    e.surface.create_entity({ name = 'ground-explosion', position = e.position })
+    e.surface.create_entity({name = 'ground-explosion', position = e.position})
 
     if e.type == 'entity-ghost' then
         e.destroy()
@@ -790,14 +792,14 @@ local function damage_entity(e)
 end
 
 local function floaty_hearts(entity, c)
-    local position = { x = entity.position.x - 0.75, y = entity.position.y - 1 }
+    local position = {x = entity.position.x - 0.75, y = entity.position.y - 1}
     local b = 1.35
     for _ = 1, c, 1 do
         local p = {
             (position.x + 0.4) + (b * -1 + random(0, b * 20) * 0.1),
             position.y + (b * -1 + random(0, b * 20) * 0.1)
         }
-        entity.surface.create_entity({ name = 'compi-speech-bubble', position = p, text = '♥', source = entity, lifetime = 30 })
+        entity.surface.create_entity({name = 'compi-speech-bubble', position = p, text = '♥', source = entity, lifetime = 30})
     end
 end
 
@@ -809,7 +811,7 @@ local function tame_unit_effects(player, entity)
         surface = player.surface,
         target = {
             entity = entity,
-            offset = { 0, -2.6 },
+            offset = {0, -2.6}
         },
         color = {
             r = player.color.r * 0.6 + 0.25,
@@ -848,7 +850,7 @@ local function on_player_used_capsule(event)
     local rpg_t = Public.get_value_from_player(player.index)
 
     if not rpg_t.enable_entity_spawn then
-        player.print('[RPG] You must enable the button in the spell GUI to cast a spell.', { color = Color.warning })
+        player.print('[RPG] You must enable the button in the spell GUI to cast a spell.', {color = Color.warning})
         return
     end
 
@@ -874,8 +876,8 @@ local function on_player_used_capsule(event)
 
     local radius = 15
     local area = {
-        left_top = { x = position.x - radius, y = position.y - radius },
-        right_bottom = { x = position.x + radius, y = position.y + radius }
+        left_top = {x = position.x - radius, y = position.y - radius},
+        right_bottom = {x = position.x + radius, y = position.y + radius}
     }
 
     if not spell.enabled then
@@ -897,10 +899,10 @@ local function on_player_used_capsule(event)
 
     local target_pos
     if spell.target then
-        target_pos = { position.x, position.y }
+        target_pos = {position.x, position.y}
     elseif projectile_types[spell.entityName] then
         local coord_modifier = get_near_coord_modifier(projectile_types[spell.entityName].max_range)
-        target_pos = { position.x + coord_modifier.x, position.y + coord_modifier.y }
+        target_pos = {position.x + coord_modifier.x, position.y + coord_modifier.y}
     end
 
     local range
@@ -948,8 +950,7 @@ local function on_player_used_capsule(event)
         rpg_t.amount = 1
     end
 
-    Event.raise(Public.events.on_spell_cast_success,
-        { player_index = player.index, spell_name = spell.entityName, amount = rpg_t.amount })
+    Event.raise(Public.events.on_spell_cast_success, {player_index = player.index, spell_name = spell.entityName, amount = rpg_t.amount})
 
     if spell.enforce_cooldown then
         if player.gui.screen[spell_gui_frame_name] then
@@ -1013,7 +1014,7 @@ Event.add(defines.events.on_player_repaired_entity, on_player_repaired_entity)
 Event.add(defines.events.on_player_respawned, on_player_respawned)
 Event.add(defines.events.on_player_rotated_entity, on_player_rotated_entity)
 Event.add(defines.events.on_pre_player_mined_item, on_pre_player_mined_item)
-Event.add("ctrl-cast-spell", on_player_used_capsule)
+Event.add('ctrl-cast-spell', on_player_used_capsule)
 Event.add(defines.events.on_player_changed_surface, on_player_changed_surface)
 Event.add(defines.events.on_player_removed, on_player_removed)
 Event.on_nth_tick(10, tick)

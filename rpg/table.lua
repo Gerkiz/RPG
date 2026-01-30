@@ -48,12 +48,10 @@ if settings.startup.comfy_level_limit.value then
     level_limit = settings.startup.comfy_level_limit.value --[[@as integer]]
 end
 
-Public.experience_levels = { 0 }
+Public.experience_levels = {0}
 for a = 1, level_limit, 1 do -- max level
     Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] + a * 8
 end
-
-
 
 Public.gui_settings_levels = {
     ['reset_text_label'] = 50,
@@ -70,7 +68,7 @@ Public.die_cause = {
 
 Public.nth_tick = 18001
 Public.visuals_delay = 1800
-Public.xp_floating_text_color = { 157, 157, 157 }
+Public.xp_floating_text_color = {157, 157, 157}
 
 Public.enemy_types = {
     ['unit'] = true,
@@ -87,11 +85,11 @@ Public.classes = {
 }
 
 Public.auto_allocate_nodes = {
-    { 'allocations.deactivated' },
-    { 'allocations.str' },
-    { 'allocations.mag' },
-    { 'allocations.dex' },
-    { 'allocations.vit' }
+    {'allocations.deactivated'},
+    {'allocations.str'},
+    {'allocations.mag'},
+    {'allocations.dex'},
+    {'allocations.vit'}
 }
 
 Public.auto_allocate_nodes_func = {
@@ -115,6 +113,8 @@ function Public.reset_table(migrate)
     this.rpg_extra.difficulty = false
     this.rpg_extra.surface_name = 'nauvis'
     this.rpg_extra.enable_health_and_mana_bars = false
+    this.rpg_extra.enable_crafting_chance = true
+    this.rpg_extra.enable_show_lvl_txt = true
     this.rpg_extra.enable_mana = false
     this.rpg_extra.mana_limit = 100000
     this.rpg_extra.enable_wave_defense = false
