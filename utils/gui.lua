@@ -19,6 +19,7 @@ local on_pre_hidden_handlers = {}
 -- global
 local data = {}
 local element_map = {}
+local removed_objects = {}
 local settings = {
     mod_gui_top_frame = true,
     disabled_tabs = {}
@@ -26,10 +27,11 @@ local settings = {
 
 Public.token =
     Global.register(
-        { data = data, element_map = element_map, settings = settings },
+        { data = data, element_map = element_map, removed_objects = removed_objects, settings = settings },
         function(tbl)
             data = tbl.data
             element_map = tbl.element_map
+            removed_objects = tbl.removed_objects
             settings = tbl.settings
         end
     )
@@ -548,6 +550,21 @@ function Public.reload_active_tab(player)
     return func(d)
 end
 
+local function on_object_destroyed(event)
+    local player_index = removed_objects[event.registration_number]
+    if not player_index then
+        return
+    end
+
+    local element_index = event.useful_id
+    removed_objects[event.registration_number] = nil
+
+    local player_data = data[player_index]
+    if player_data then
+        player_data[element_index] = nil
+    end
+end
+
 local function draw_main_frame(player)
     local tabs = main_gui_tabs
     Public.clear_all_active_frames(player)
@@ -703,5 +720,7 @@ Event.on_configuration_changed(
         end
     end
 )
+
+Event.add(defines.events.on_object_destroyed, on_object_destroyed)
 
 return Public

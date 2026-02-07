@@ -728,7 +728,8 @@ function Public.update_player_stats(player)
     local reach_dist = (s['rpg_magic_reach_distance'] and s['rpg_magic_reach_distance'].value) or 0.12
     local loot_pickup = (s['rpg_magic_loot_pickup_distance'] and s['rpg_magic_loot_pickup_distance'].value) or 0.12
     local item_pickup = (s['rpg_magic_item_pickup_distance'] and s['rpg_magic_item_pickup_distance'].value) or 0.12
-    local resource_reach = (s['rpg_magic_resource_reach_distance'] and s['rpg_magic_resource_reach_distance'].value) or 0.05
+    local resource_reach = (s['rpg_magic_resource_reach_distance'] and s['rpg_magic_resource_reach_distance'].value) or
+        0.05
     local cap_long = (s['rpg_magic_distance_cap_long'] and s['rpg_magic_distance_cap_long'].value) or 60
     local cap_short = (s['rpg_magic_distance_cap_short'] and s['rpg_magic_distance_cap_short'].value) or 20
     local mana_per_point = (s['rpg_magic_mana_per_point'] and s['rpg_magic_mana_per_point'].value) or 2
@@ -744,10 +745,12 @@ function Public.update_player_stats(player)
 
     local magic = rpg_t.magicka - 10
     local v = magic * magic_base
-    Modifiers.update_single_modifier(player, 'character_build_distance_bonus', 'rpg', math.min(cap_long, round(v * build_dist, 3)))
+    Modifiers.update_single_modifier(player, 'character_build_distance_bonus', 'rpg',
+        math.min(cap_long, round(v * build_dist, 3)))
     Modifiers.update_single_modifier(player, 'character_item_drop_distance_bonus', 'rpg',
         math.min(cap_long, round(v * item_drop_dist, 3)))
-    Modifiers.update_single_modifier(player, 'character_reach_distance_bonus', 'rpg', math.min(cap_long, round(v * reach_dist, 3)))
+    Modifiers.update_single_modifier(player, 'character_reach_distance_bonus', 'rpg',
+        math.min(cap_long, round(v * reach_dist, 3)))
     Modifiers.update_single_modifier(player, 'character_loot_pickup_distance_bonus', 'rpg',
         math.min(cap_short, round(v * loot_pickup, 3)))
     Modifiers.update_single_modifier(player, 'character_item_pickup_distance_bonus', 'rpg',
@@ -762,8 +765,10 @@ function Public.update_player_stats(player)
 
     local dexterity = rpg_t.dexterity - 10
     Modifiers.update_single_modifier(player, 'character_running_speed_modifier', 'rpg', round(dexterity * run_speed, 3))
-    Modifiers.update_single_modifier(player, 'character_crafting_speed_modifier', 'rpg', round(dexterity * craft_speed, 3))
-    Modifiers.update_single_modifier(player, 'character_health_bonus', 'rpg', round((rpg_t.vitality - 10) * health_bonus, 3))
+    Modifiers.update_single_modifier(player, 'character_crafting_speed_modifier', 'rpg',
+        round(dexterity * craft_speed, 3))
+    Modifiers.update_single_modifier(player, 'character_health_bonus', 'rpg',
+        round((rpg_t.vitality - 10) * health_bonus, 3))
     Modifiers.update_player_modifiers(player)
 end
 
