@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.8
+Date: 2026-02-07
+  Bugfixes:
+    - Fixed an issue with rpg level text showing when the player levels up if disabled.
+    - 
+
+---------------------------------------------------------------------------------------------------
+Version: 2.0.7
+Date: 2026-02-02
+  Changes:
+    - Marked rpg_pd_fork as incompatible - a fork made that simply adds more spells.
+---------------------------------------------------------------------------------------------------
 Version: 2.0.6
 Date: 2026-01-30
   Changes:
