@@ -40,27 +40,17 @@ Public.events = {
     on_spell_cast_failure = Event.generate_event_name()
 }
 
-Public.points_per_level = 5
+Public.points_per_level = settings.startup.rpg_points_per_level and settings.startup.rpg_points_per_level.value or 5
 
-function Public.set_points_per_level(value)
-    Public.points_per_level = value
-    return Public.points_per_level
-end
+local level_limit = settings.startup.comfy_level_limit and settings.startup.comfy_level_limit.value or 4999
 
-local level_limit = 4999
+local xp_per_level_factor = settings.startup.rpg_xp_per_level_factor and settings.startup.rpg_xp_per_level_factor.value or
+    8
 
-if settings.startup.comfy_level_limit.value then
-    level_limit = settings.startup.comfy_level_limit.value --[[@as integer]]
-end
-
-local xp_per_level_factor = 8
-if settings.startup.rpg_xp_per_level_factor and settings.startup.rpg_xp_per_level_factor.value then
-    xp_per_level_factor = settings.startup.rpg_xp_per_level_factor.value
-end
-
-Public.experience_levels = {0}
+Public.experience_levels = { 0 }
 for a = 1, level_limit, 1 do
-    Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] + a * xp_per_level_factor
+    Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] +
+        a * xp_per_level_factor
 end
 
 Public.gui_settings_levels = {
@@ -78,7 +68,7 @@ Public.die_cause = {
 
 Public.nth_tick = 18001
 Public.visuals_delay = 1800
-Public.xp_floating_text_color = {157, 157, 157}
+Public.xp_floating_text_color = { 157, 157, 157 }
 
 Public.enemy_types = {
     ['unit'] = true,
@@ -95,11 +85,11 @@ Public.classes = {
 }
 
 Public.auto_allocate_nodes = {
-    {'allocations.deactivated'},
-    {'allocations.str'},
-    {'allocations.mag'},
-    {'allocations.dex'},
-    {'allocations.vit'}
+    { 'allocations.deactivated' },
+    { 'allocations.str' },
+    { 'allocations.mag' },
+    { 'allocations.dex' },
+    { 'allocations.vit' }
 }
 
 Public.auto_allocate_nodes_func = {

@@ -30,6 +30,12 @@ data:extend {
         default_value = true
     },
     {
+        type = 'bool-setting',
+        name = 'rpg_enable_magazine_damage_bonus',
+        setting_type = 'runtime-global',
+        default_value = true
+    },
+    {
         type = 'double-setting',
         name = 'comfy_personal_tax_rate',
         setting_type = 'runtime-global',
@@ -55,7 +61,7 @@ data:extend {
     {
         type = 'double-setting',
         name = 'rpg_points_per_level',
-        setting_type = 'runtime-global',
+        setting_type = 'startup',
         default_value = 5,
         minimum_value = 1,
         maximum_value = 50
