@@ -551,6 +551,7 @@ function Public.reload_active_tab(player)
 end
 
 local function on_object_destroyed(event)
+    if not removed_objects then return end
     local player_index = removed_objects[event.registration_number]
     if not player_index then
         return
