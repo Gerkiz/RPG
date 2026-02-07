@@ -718,34 +718,52 @@ function Public.update_player_stats(player)
         return
     end
 
+    local s = settings.global
+    local inv_slots = (s['rpg_strength_inventory_slots'] and s['rpg_strength_inventory_slots'].value) or 0.2
+    local mining_speed = (s['rpg_strength_mining_speed'] and s['rpg_strength_mining_speed'].value) or 0.006
+    local following_robots = (s['rpg_strength_following_robots'] and s['rpg_strength_following_robots'].value) or 0.015
+    local magic_base = (s['rpg_magic_distance_base'] and s['rpg_magic_distance_base'].value) or 0.22
+    local build_dist = (s['rpg_magic_build_distance'] and s['rpg_magic_build_distance'].value) or 0.12
+    local item_drop_dist = (s['rpg_magic_item_drop_distance'] and s['rpg_magic_item_drop_distance'].value) or 0.05
+    local reach_dist = (s['rpg_magic_reach_distance'] and s['rpg_magic_reach_distance'].value) or 0.12
+    local loot_pickup = (s['rpg_magic_loot_pickup_distance'] and s['rpg_magic_loot_pickup_distance'].value) or 0.12
+    local item_pickup = (s['rpg_magic_item_pickup_distance'] and s['rpg_magic_item_pickup_distance'].value) or 0.12
+    local resource_reach = (s['rpg_magic_resource_reach_distance'] and s['rpg_magic_resource_reach_distance'].value) or 0.05
+    local cap_long = (s['rpg_magic_distance_cap_long'] and s['rpg_magic_distance_cap_long'].value) or 60
+    local cap_short = (s['rpg_magic_distance_cap_short'] and s['rpg_magic_distance_cap_short'].value) or 20
+    local mana_per_point = (s['rpg_magic_mana_per_point'] and s['rpg_magic_mana_per_point'].value) or 2
+    local run_speed = (s['rpg_dexterity_running_speed'] and s['rpg_dexterity_running_speed'].value) or 0.001
+    local craft_speed = (s['rpg_dexterity_crafting_speed'] and s['rpg_dexterity_crafting_speed'].value) or 0.015
+    local health_bonus = (s['rpg_vitality_health_bonus'] and s['rpg_vitality_health_bonus'].value) or 6
+
     local strength = rpg_t.strength - 10
-    Modifiers.update_single_modifier(player, 'character_inventory_slots_bonus', 'rpg', round(strength * 0.2, 3))
-    Modifiers.update_single_modifier(player, 'character_mining_speed_modifier', 'rpg', round(strength * 0.006, 3))
+    Modifiers.update_single_modifier(player, 'character_inventory_slots_bonus', 'rpg', round(strength * inv_slots, 3))
+    Modifiers.update_single_modifier(player, 'character_mining_speed_modifier', 'rpg', round(strength * mining_speed, 3))
     Modifiers.update_single_modifier(player, 'character_maximum_following_robot_count_bonus', 'rpg',
-        round(strength / 2 * 0.03, 3))
+        round(strength * following_robots, 3))
 
     local magic = rpg_t.magicka - 10
-    local v = magic * 0.22
-    Modifiers.update_single_modifier(player, 'character_build_distance_bonus', 'rpg', math.min(60, round(v * 0.12, 3)))
+    local v = magic * magic_base
+    Modifiers.update_single_modifier(player, 'character_build_distance_bonus', 'rpg', math.min(cap_long, round(v * build_dist, 3)))
     Modifiers.update_single_modifier(player, 'character_item_drop_distance_bonus', 'rpg',
-        math.min(60, round(v * 0.05, 3)))
-    Modifiers.update_single_modifier(player, 'character_reach_distance_bonus', 'rpg', math.min(60, round(v * 0.12, 3)))
+        math.min(cap_long, round(v * item_drop_dist, 3)))
+    Modifiers.update_single_modifier(player, 'character_reach_distance_bonus', 'rpg', math.min(cap_long, round(v * reach_dist, 3)))
     Modifiers.update_single_modifier(player, 'character_loot_pickup_distance_bonus', 'rpg',
-        math.min(20, round(v * 0.12, 3)))
+        math.min(cap_short, round(v * loot_pickup, 3)))
     Modifiers.update_single_modifier(player, 'character_item_pickup_distance_bonus', 'rpg',
-        math.min(20, round(v * 0.12, 3)))
+        math.min(cap_short, round(v * item_pickup, 3)))
     Modifiers.update_single_modifier(player, 'character_resource_reach_distance_bonus', 'rpg',
-        math.min(20, round(v * 0.05, 3)))
+        math.min(cap_short, round(v * resource_reach, 3)))
     if rpg_t.mana_max >= rpg_extra.mana_limit then
         rpg_t.mana_max = rpg_extra.mana_limit
     else
-        rpg_t.mana_max = round((magic) * 2, 3)
+        rpg_t.mana_max = round(magic * mana_per_point, 3)
     end
 
     local dexterity = rpg_t.dexterity - 10
-    Modifiers.update_single_modifier(player, 'character_running_speed_modifier', 'rpg', round(dexterity * 0.0010, 3)) -- reduced since too high speed kills UPS.
-    Modifiers.update_single_modifier(player, 'character_crafting_speed_modifier', 'rpg', round(dexterity * 0.015, 3))
-    Modifiers.update_single_modifier(player, 'character_health_bonus', 'rpg', round((rpg_t.vitality - 10) * 6, 3))
+    Modifiers.update_single_modifier(player, 'character_running_speed_modifier', 'rpg', round(dexterity * run_speed, 3))
+    Modifiers.update_single_modifier(player, 'character_crafting_speed_modifier', 'rpg', round(dexterity * craft_speed, 3))
+    Modifiers.update_single_modifier(player, 'character_health_bonus', 'rpg', round((rpg_t.vitality - 10) * health_bonus, 3))
     Modifiers.update_player_modifiers(player)
 end
 

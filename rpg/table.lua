@@ -42,15 +42,25 @@ Public.events = {
 
 Public.points_per_level = 5
 
+function Public.set_points_per_level(value)
+    Public.points_per_level = value
+    return Public.points_per_level
+end
+
 local level_limit = 4999
 
 if settings.startup.comfy_level_limit.value then
     level_limit = settings.startup.comfy_level_limit.value --[[@as integer]]
 end
 
+local xp_per_level_factor = 8
+if settings.startup.rpg_xp_per_level_factor and settings.startup.rpg_xp_per_level_factor.value then
+    xp_per_level_factor = settings.startup.rpg_xp_per_level_factor.value
+end
+
 Public.experience_levels = {0}
-for a = 1, level_limit, 1 do -- max level
-    Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] + a * 8
+for a = 1, level_limit, 1 do
+    Public.experience_levels[#Public.experience_levels + 1] = Public.experience_levels[#Public.experience_levels] + a * xp_per_level_factor
 end
 
 Public.gui_settings_levels = {

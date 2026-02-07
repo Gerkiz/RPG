@@ -3,7 +3,10 @@ Version: 2.0.8
 Date: 2026-02-07
   Bugfixes:
     - Fixed an issue with rpg level text showing when the player levels up if disabled.
-    - 
+    - Fixed an issue where stats were not being applied upon reconnect.
+  Changes:
+    - RPG stat modifiers are now configurable via mod settings (strength, magic, dexterity, vitality multipliers, distance caps, mana per point).
+    - Points per level and XP-per-level factor are now configurable via mod settings (rpg_points_per_level, rpg_xp_per_level_factor).
 
 ---------------------------------------------------------------------------------------------------
 Version: 2.0.7

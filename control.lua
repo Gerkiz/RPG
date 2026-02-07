@@ -10,8 +10,24 @@ Event.on_init(
     function()
         RPG.reset_table()
         RPG.rpg_reset_all_players()
+        if settings.global.rpg_points_per_level and settings.global.rpg_points_per_level.value then
+            RPG.set_points_per_level(settings.global.rpg_points_per_level.value)
+        else
+            RPG.set_points_per_level(5)
+        end
     end
 )
+
+Event.on_load(
+    function()
+        if settings.global.rpg_points_per_level and settings.global.rpg_points_per_level.value then
+            RPG.set_points_per_level(settings.global.rpg_points_per_level.value)
+        else
+            RPG.set_points_per_level(5)
+        end
+    end
+)
+
 if settings.startup.comfy_disable_cooldown.value then
     RPG.disable_cooldowns_on_spells()
 end
@@ -55,6 +71,11 @@ Event.on_nth_tick(
             RPG.toggle_debug(true)
         else
             RPG.toggle_debug(false)
+        end
+        if settings.global.rpg_points_per_level and settings.global.rpg_points_per_level.value then
+            RPG.set_points_per_level(settings.global.rpg_points_per_level.value)
+        else
+            RPG.set_points_per_level(5)
         end
     end
 )
